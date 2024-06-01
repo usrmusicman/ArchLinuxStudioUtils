@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=EFIStub MenuEntry Creation Utility
-Comment=Create an EFIStub Boot Entry
+Name=Create EFIBoot Entry
+Comment=EFIStub Bootloader Manager
 Exec=pkexec --user root /usr/bin/efistub-manager create
 Icon=/usr/share/icons/breeze/apps/48/system-run.svg
 Categories=System;

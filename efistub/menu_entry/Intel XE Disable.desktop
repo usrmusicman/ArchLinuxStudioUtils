@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=Intel Xe Disable
-Comment=Disable the experimental XE Intel Video Drivers
+Name=Intel XE Driver Disable
+Comment=Intel XE Experimental Video Driver Toggle
 Exec=pkexec --user root /usr/bin/xe-kernel-driver-toggle i915
 Icon=/usr/share/icons/breeze/apps/48/system-run.svg
 Categories=System;
