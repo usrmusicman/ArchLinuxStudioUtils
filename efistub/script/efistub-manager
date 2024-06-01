@@ -1,0 +1,127 @@
+#!/bin/sh
+
+## Maintainer Alexander Mcmillan <linuxguy93@gmail.com>
+## Dependencies: bash efibootmgr
+
+# Operating system name
+OS_NAME="Archlinux"
+
+# Find what partition where your current root is installed
+ROOT_PARTITION=`mount | grep " / " | cut -d " " -f 1`
+
+# Get root partition UUID
+ROOTPART_UUID=`lsblk $ROOT_PARTITION -o UUID | tr "\n" " " | cut -d " " -f 2`
+
+# Get root partition filesystem type
+FSTYPE_ROOTPART=`lsblk $ROOT_PARTITION -o FSTYPE | tr "\n" " " | cut -d " " -f 2`
+
+# Boot commandline options
+BOOT_OPTIONS="cpufreq.default_governor=performance preempt=full root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID mitigations=off threadirqs usbcore.autosuspend=-1 quiet splash"
+
+# Detect CPU manufacturer
+DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
+
+configure_creation_params() {
+
+    # Set the boot disk variable
+    if [[ "${ROOT_PARTITION:0:9}" == "/dev/nvme" ]]; then
+        BOOT_LOADER_DISK=${ROOT_PARTITION::-2}
+    else
+        BOOT_LOADER_DISK=${ROOT_PARTITION::-1}
+    fi
+
+    # Start of menu code
+    echo "Choose your kernel"
+    echo ""
+    ls /boot/vmlinuz* | sed -e "s/\/boot\/vmlinuz-//g"
+    echo ""
+    read -r -p "Type in the you want to create a boot entry for (i.e. linux): " BOOT_LOADER_KERNEL
+    echo ""
+
+}
+
+create_boot_entry() {
+
+    # Create EFIStub boot entries
+    if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    else
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    fi
+
+}
+
+delete_boot_entries() {
+
+        # Get a list of all known boot options that are available to efibootmgr
+        BootArray=(`efibootmgr | grep "BootOrder" | cut -d " " -f 2 | tr "," "\n" | sort`)
+
+        # Boot entry deletion menu
+        echo "Delete boot entries"
+        echo ""
+
+        # Parse through entries and list them
+        for BootNum in ${BootArray[@]};
+        do
+            BootEntry=(`efibootmgr | grep Boot${BootNum} | cut -d " " -f 1 | sed -e "s/\*//" | sed -e "s/Boot//"`)
+            EntryName=(`efibootmgr | grep Boot${BootNum} | cut -d " " -f 2`)
+            echo "$EntryName: $BootEntry"
+        done
+
+        # Boot entry deletion menu
+        echo ""
+        read -r -p "Choose what boot entry to delete (i.e. 0001): " delete_selection
+
+        # Delete chosen boot entry
+        if [[ ${#delete_selection} == 4 ]]; then
+            if [[ ${delete_selection} =~ ^[0-9]+$  ]]; then
+                efibootmgr -b $delete_selection -B
+            else
+                echo "Please type a number with a length of 4 characters"
+            fi
+        else
+            echo "Please type a number with a length of 4 characters"
+        fi
+
+}
+
+## Main program
+if [[ "$USER" == "root" ]]; then
+    if [[ "$#" == "1" ]]; then
+        if [[ "$1" == "create" ]]; then
+            clear
+            configure_creation_params
+            clear
+            create_boot_entry
+            clear
+        elif [[ "$1" == "delete" ]]; then
+            clear
+            delete_boot_entries
+            clear
+        elif [[ "$1" == "help" ]]; then
+            echo "Available Options"
+            echo ""
+            echo "create: Create a boot variable"
+            echo "delete: Delete a boot variable"
+            echo "help: Show this help message"
+        fi
+    else
+        echo "Please type only 1 argument, create | delete | help"
+    fi
+else
+    echo "You need to be root to run this script"
+fi

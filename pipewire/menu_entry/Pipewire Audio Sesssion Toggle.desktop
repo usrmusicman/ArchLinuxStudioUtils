@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Pipewire Audio Sesssion Toggle
+Comment=Configure the audio session of pipewire
+Exec=/usr/bin/pipewire_audio_toggle
+Icon=/usr/share/icons/breeze/apps/48/system-run.svg
+Categories=AudioVideo;X-AudioEditing;Qt;
+Terminal=false
+Type=Application
+Keywords=Audio;Video;Pipewire;

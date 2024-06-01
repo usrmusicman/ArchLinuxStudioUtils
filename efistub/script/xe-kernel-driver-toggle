@@ -1,0 +1,114 @@
+#!/bin/sh
+
+## Maintainer Alexander Mcmillan <linuxguy93@gmail.com>
+## Dependencies: bash efibootmgr
+
+# Operating system name
+OS_NAME="Archlinux"
+
+# Find what partition where your current root is installed
+ROOT_PARTITION=`mount | grep " / " | cut -d " " -f 1`
+
+# Get root partition UUID
+ROOTPART_UUID=`lsblk $ROOT_PARTITION -o UUID | tr "\n" " " | cut -d " " -f 2`
+
+# Get root partition filesystem type
+FSTYPE_ROOTPART=`lsblk $ROOT_PARTITION -o FSTYPE | tr "\n" " " | cut -d " " -f 2`
+
+# Boot commandline options
+BOOT_OPTIONS="cpufreq.default_governor=performance preempt=full root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID mitigations=off threadirqs usbcore.autosuspend=-1 quiet splash"
+
+# Detect CPU manufacturer
+DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
+
+# Detect GPU manufacturer
+DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
+ID_GPU=`lspci -vn | grep VGA | cut -d " " -f 3 | cut -d ":" -f 2`
+
+# Intel Media Driver Choice
+INTEL_DRIVER_CHOICE=$1
+
+configure_creation_params() {
+
+    # Set the boot disk variable
+    if [[ "${ROOT_PARTITION:0:9}" == "/dev/nvme" ]]; then
+        BOOT_LOADER_DISK=${ROOT_PARTITION::-2}
+    else
+        BOOT_LOADER_DISK=${ROOT_PARTITION::-1}
+    fi
+
+    # Get the kernel in use and set the $BOOT_LOADER_KERNEL variable
+    KERNEL_IN_USE=`uname -r | cut -d "-" -f 3`
+    BOOT_LOADER_KERNEL=linux-${KERNEL_IN_USE}
+
+}
+
+create_boot_entry_i915() {
+
+    # Create EFIStub boot entries
+    if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    fi
+
+}
+
+create_boot_entry_xe() {
+
+    # Create EFIStub boot entries
+    if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
+        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+        fi
+    fi
+
+}
+
+
+## Main program
+if [[ "$USER" == "root" ]]; then
+    if [[ "$DETECT_GPU" == "Intel" ]]; then
+        if [[ "$#" == "1" ]]; then
+            if [[ "$1" == "i915" ]]; then
+                clear
+                configure_creation_params
+                clear
+                create_boot_entry_i915
+                clear
+            elif [[ "$1" == "xe" ]]; then
+                clear
+                configure_creation_params
+                clear
+                create_boot_entry_xe
+                clear
+            elif [[ "$1" == "help" ]]; then
+                echo "Available Options"
+                echo ""
+                echo "i915: Toggle use of legacy Intel i915 GPU Driver (Intel ARC Alchemist and older)"
+                echo "xe: Toggle use of the new experimental Intel XE GPU Driver (Intel ARC Battlemage and newer)"
+                echo "help: Show this help message"
+            fi
+        else
+            echo "Please type only 1 argument, i915 | xe | help"
+        fi
+    fi
+else
+    echo "You need to be root to run this script"
+fi

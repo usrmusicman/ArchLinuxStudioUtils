@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=EFIStub MenuEntry Deletion Utility
+Comment=Delete an EFIStub Boot Entry
+Exec=pkexec --user root /usr/bin/efistub-manager delete
+Icon=/usr/share/icons/breeze/apps/48/system-run.svg
+Categories=System;
+Terminal=true
+Type=Application
+Keywords=Boot;Bootloader;EFI;
