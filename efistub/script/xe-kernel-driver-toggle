@@ -54,9 +54,9 @@ create_boot_entry_i915() {
         fi
     elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
         if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.enable_guc=3 $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
         elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.enable_guc=3 $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
         fi
     fi
 
