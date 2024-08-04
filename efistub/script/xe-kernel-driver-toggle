@@ -16,7 +16,7 @@ ROOTPART_UUID=`lsblk $ROOT_PARTITION -o UUID | tr "\n" " " | cut -d " " -f 2`
 FSTYPE_ROOTPART=`lsblk $ROOT_PARTITION -o FSTYPE | tr "\n" " " | cut -d " " -f 2`
 
 # Boot commandline options
-BOOT_OPTIONS="cpufreq.default_governor=performance preempt=full root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID mitigations=off threadirqs usbcore.autosuspend=-1 quiet splash"
+BOOT_OPTIONS="preempt=full root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID threadirqs quiet splash"
 
 # Detect CPU manufacturer
 DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
