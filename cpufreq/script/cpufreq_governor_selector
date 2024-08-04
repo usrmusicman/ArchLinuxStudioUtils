@@ -1,0 +1,33 @@
+#!/bin/sh
+
+## Environment Variables
+AVAILABLE_GOVERNORS=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors`
+CURRENT_GOVERNOR=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+
+## -------- Start of script
+
+## Make sure the user is root
+if [[ "$USER" == "root" ]]; then
+
+    ## Clear the screen
+    clear
+
+    ## Main Menu
+    echo "Available CPU Scaling Governors: ${AVAILABLE_GOVERNORS}"
+    echo ""
+    echo "Current CPU Scaling Governor: $CURRENT_GOVERNOR"
+    echo ""
+    read -p "Type the CPU scaling governor you want to use: " GOVERNOR_CHOICE
+
+    ## Set scaling for all cores
+    for (( i=0; i<$(nproc); i++ ))
+    do
+        echo "$GOVERNOR_CHOICE" > /sys/devices/system/cpu/cpu${i}/cpufreq/scaling_governor 2>&1 /dev/null
+    done
+
+else
+
+    ## Error message
+    echo "You must be root to run this script"
+
+fi

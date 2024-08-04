@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=CPUFreq Selector
+Comment=CPU Frequency Scaling Governor Selector
+Exec=pkexec --user root /usr/bin/cpufreq_governor_selector
+Icon=/usr/share/icons/breeze/apps/48/system-run.svg
+Categories=System;Utility;
+Terminal=true
+Type=Application
+Keywords=CPU;CPUFreq;Scaling;System;
