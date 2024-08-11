@@ -4,12 +4,16 @@
 
 ## Variables
 
-AUDIO_BUFFER=`kdialog --combobox "Select an audio buffer" "16" "24" "32" "48" "64" "96" "128" "192" "256" "384" "512" "768" "1024" "2048" "4096" "8192"`
-AUDIO_SAMPLE_RATE=`kdialog --combobox "Select a samplerate" "44100" "48000" "88200" "96000" "192000"`
+AUDIO_BUFFER=`kdialog --combobox "Select an audio buffer" "default" "16" "24" "32" "48" "64" "96" "128" "192" "256" "384" "512" "768" "1024" "2048" "4096" "8192"`
+AUDIO_SAMPLE_RATE=`kdialog --combobox "Select a samplerate" "default" "44100" "48000" "88200" "96000" "192000"`
 
 ## Set audio buffer for pipewire
 
 case $AUDIO_BUFFER in
+
+	default)
+		pw-metadata -n settings 0 clock.force-quantum 0
+		;;
 
 	16)
 		pw-metadata -n settings 0 clock.force-quantum 16
@@ -84,6 +88,10 @@ esac
 ## Set audio samplerate for pipewire
 
 case $AUDIO_SAMPLE_RATE in
+
+	default)
+		pw-metadata -n settings 0 clock.force-rate 0
+		;;
 
 	44100)
 		pw-metadata -n settings 0 clock.force-rate 44100
