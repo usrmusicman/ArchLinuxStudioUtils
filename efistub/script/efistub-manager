@@ -47,7 +47,7 @@ configure_creation_params() {
     ls /boot/vmlinuz* | sed -e "s/\/boot\/vmlinuz-//g"
     echo ""
     read -r -p "Type in the kernel you want to create a boot entry for (i.e. linux): " BOOT_LOADER_KERNEL
-    read -r -p "Do you want to create new kernel boot options (Type: Yes or No): " CREATE_CUSTOM_OPTIONS
+    read -r -p "Do you want to replace or create default kernel boot options (Type: Yes or No): " CREATE_CUSTOM_OPTIONS
 
     # Crate custom options variable logic
     if [[ $CREATE_CUSTOM_OPTIONS == "Yes" ]]; then
