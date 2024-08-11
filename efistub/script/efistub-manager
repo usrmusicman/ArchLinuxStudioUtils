@@ -2,7 +2,7 @@
 
 ## Maintainer Alexander Mcmillan <linuxguy93@gmail.com>
 ## Dependencies: bash efibootmgr
-## IMPORTANT: Make sure to have created .conf configuration file(s) prior to running this script
+## IMPORTANT: Make sure you have created .conf configuration file(s) in the EFISTUB_CONFIG_DIRECTORY location prior to running this script
 
 # Operating system name
 OS_NAME="Archlinux"
