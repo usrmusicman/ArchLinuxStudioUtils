@@ -2,6 +2,7 @@
 
 ## Maintainer Alexander Mcmillan <linuxguy93@gmail.com>
 ## Dependencies: bash efibootmgr
+## IMPORTANT: Make sure to have created .conf configuration file(s) prior to running this script
 
 # Operating system name
 OS_NAME="Archlinux"
@@ -16,17 +17,13 @@ ROOTPART_UUID=`lsblk $ROOT_PARTITION -o UUID | tr "\n" " " | cut -d " " -f 2`
 FSTYPE_ROOTPART=`lsblk $ROOT_PARTITION -o FSTYPE | tr "\n" " " | cut -d " " -f 2`
 
 # EFIStub boot options config file
-OPTIONS_CONFIG_FILE=/etc/efistub/boot_options.conf
+EFISTUB_CONFIG_DIRECTORY=/etc/efistub.d
 
 # Boot options to be used
-BOOT_OPTIONS=`cat $OPTIONS_CONFIG_FILE`
+BOOT_OPTIONS=`cat ${EFISTUB_CONFIG_DIRECTORY}/*.conf | tr "\n" " "`
 
 # Detect CPU manufacturer
 DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
-
-# Detect GPU manufacturer
-DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
-ID_GPU=`lspci -vn | grep VGA | cut -d " " -f 3 | cut -d ":" -f 2`
 
 # Set the boot disk variable
 if [[ "${ROOT_PARTITION:0:9}" == "/dev/nvme" ]]; then
@@ -35,40 +32,14 @@ else
     BOOT_LOADER_DISK=${ROOT_PARTITION::-1}
 fi
 
-# Get the kernel in use and set the $BOOT_LOADER_KERNEL variable
-KERNEL_IN_USE=`uname -r | cut -d "-" -f 3`
-BOOT_LOADER_KERNEL=linux-${KERNEL_IN_USE}
+create_boot_entry() {
 
-configure_creation_params() {
-
-    # Configuration of boot entries
+    # Choose your kernel for the boot entry
     echo "Choose your kernel"
     echo ""
     ls /boot/vmlinuz* | sed -e "s/\/boot\/vmlinuz-//g"
     echo ""
     read -r -p "Type in the kernel you want to create a boot entry for (i.e. linux): " BOOT_LOADER_KERNEL
-    read -r -p "Do you want to replace or create default kernel boot options (Type: Yes or No): " CREATE_CUSTOM_OPTIONS
-
-    # Crate custom options variable logic
-    if [[ $CREATE_CUSTOM_OPTIONS == "Yes" ]]; then
-        if [[ -f $OPTIONS_CONFIG_FILE ]]; then
-            # Backup old boot options file
-            mv ${OPTIONS_CONFIG_FILE} ${OPTIONS_CONFIG_FILE}.old
-            read -r -p "Type in your boot options here: " BOOT_OPTIONS
-        else
-            read -r -p "Type in your boot options here: " BOOT_OPTIONS
-        fi
-        mkdir -p ${OPTIONS_CONFIG_FILE/boot_options.conf/}
-        echo "$BOOT_OPTIONS" > ${OPTIONS_CONFIG_FILE}
-    elif [[ $CREATE_CUSTOM_OPTIONS == "No" ]]; then
-        clear
-    else
-        clear
-    fi
-
-}
-
-create_boot_entry() {
 
     # Create EFIStub boot entries
     if [[ ! -z "$BOOT_OPTIONS" ]]; then
@@ -92,46 +63,8 @@ create_boot_entry() {
             fi
         fi
     else
-        echo "Please create a configuration file with boot options only in $OPITIONS_CONFIG_FILE"
+        echo "Please create .conf configuration file(s) with boot options in $EFISTUB_CONFIG_DIRECTORY"
         sleep 5
-    fi
-
-}
-
-create_i915_entry() {
-
-    # Create EFIStub boot entries
-    if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
-        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        fi
-    elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
-        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.enable_guc=3 $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.enable_guc=3 $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        fi
-    fi
-
-}
-
-create_xe_entry() {
-
-    # Create EFIStub boot entries
-    if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
-        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        fi
-    elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
-        if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
-            efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " i915.force_probe=!${ID_GPU} xe.force_probe=${ID_GPU} $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
-        fi
     fi
 
 }
@@ -170,63 +103,6 @@ delete_boot_entries() {
 
 }
 
-experimental_options() {
-
-   while :
-    do
-        # Menu Choices
-        echo "Experimental Boot Options"
-        echo ""
-        echo "XE: Intel XE driver"
-        echo "Exit: exit this menu"
-        echo ""
-        read -r -p "Choose an option: " EXPERIMENTAL_FEATURE
-
-        # Menu Logic
-        if [[ $EXPERIMENTAL_FEATURE == "XE" ]]; then
-            clear
-            intel_xe
-            clear
-        elif [[ $EXPERIMENTAL_FEATURE == "Exit" ]]; then
-            break
-        else
-            clear
-        fi
-    done
-
-}
-
-intel_xe() {
-
-    while :
-    do
-        # Menu Choices
-        echo "Intel experimental XE GPU driver"
-        echo ""
-        echo "Enable: Enable experimental Intel XE driver"
-        echo "Disable: Disable experimental Intel XE driver for the stable i915 driver"
-        echo "Exit: exit this menu"
-        echo ""
-        read -r -p "Choose an option: " EXPERIMENTAL_FEATURE
-
-        # Menu Logic
-        if [[ $EXPERIMENTAL_FEATURE == "Enable" ]]; then
-            clear
-            create_xe_entry
-            clear
-        elif [[ $EXPERIMENTAL_FEATURE == "Disable" ]]; then
-            clear
-            create_i915_entry
-            clear
-        elif [[ $EXPERIMENTAL_FEATURE == "Exit" ]]; then
-            break
-        else
-            clear
-        fi
-    done
-
-}
-
 ## Main program
 if [[ "$USER" == "root" ]]; then
     while :
@@ -236,9 +112,7 @@ if [[ "$USER" == "root" ]]; then
         echo "EFI Management Script"
         echo ""
         echo "Create: create a boot entry"
-        echo "Configure: configure extra boot entries"
         echo "Delete: remove a boot entry"
-        echo "Experimental: try experimental options"
         echo "Exit: exit the script"
         echo ""
         read -r -p "Choose an option: " OPTION
@@ -248,17 +122,9 @@ if [[ "$USER" == "root" ]]; then
             clear
             create_boot_entry
             clear
-        elif [[ "$OPTION" == "Configure" ]]; then
-            clear
-            configure_creation_params
-            clear
         elif [[ "$OPTION" == "Delete" ]]; then
             clear
             delete_boot_entries
-            clear
-        elif [[ "$OPTION" == "Experimental" ]]; then
-            clear
-            experimental_options
             clear
         elif [[ "$OPTION" == "Exit" ]]; then
             break
