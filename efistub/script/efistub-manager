@@ -2,7 +2,7 @@
 
 ## Maintainer Alexander Mcmillan <linuxguy93@gmail.com>
 ## Dependencies: bash efibootmgr
-## IMPORTANT: Make sure you have created .conf configuration file(s) in the EFISTUB_CONFIG_DIRECTORY location prior to running this script
+## IMPORTANT: Make sure you have created the efistub_boot_parameters.conf configuration file in the EFISTUB_CONFIG location prior to running this script
 
 # Operating system name
 OS_NAME="Archlinux"
@@ -16,11 +16,11 @@ ROOTPART_UUID=`lsblk $ROOT_PARTITION -o UUID | tr "\n" " " | cut -d " " -f 2`
 # Get root partition filesystem type
 FSTYPE_ROOTPART=`lsblk $ROOT_PARTITION -o FSTYPE | tr "\n" " " | cut -d " " -f 2`
 
-# EFIStub boot options config file
-EFISTUB_CONFIG_DIRECTORY=/etc/efistub.d
+# EFIStub configuration file
+EFISTUB_CONFIG="/etc/conf.d/efistub_boot_parameters.conf"
 
 # Boot options to be used
-BOOT_OPTIONS=`cat ${EFISTUB_CONFIG_DIRECTORY}/*.conf | tr "\n" " "`
+BOOT_OPTIONS=`cat $EFISTUB_CONFIG`
 
 # Detect CPU manufacturer
 DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
@@ -45,26 +45,45 @@ create_boot_entry() {
     if [[ ! -z "$BOOT_OPTIONS" ]]; then
         if [[ "$DETECT_CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
             if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
                 efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\amd-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             fi
         elif [[ "$DETECT_CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
             if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
                 efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\intel-ucode.img initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             fi
         else
             if [[ "$FSTYPE_ROOTPART" == "btrfs" ]]; then
-                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,noatime,rw rootfstype=btrfs $BOOT_OPTIONS initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
+                efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOTPART_UUID resume=UUID=$ROOTPART_UUID $BOOT_OPTIONS initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             elif [[ "$FSTYPE_ROOTPART" == "ext4" ]]; then
                 efibootmgr --create --disk $BOOT_LOADER_DISK --part 1 --label "${OS_NAME}_${BOOT_LOADER_KERNEL}" --loader /vmlinuz-$BOOT_LOADER_KERNEL --unicode " $BOOT_OPTIONS rw initrd=\initramfs-$BOOT_LOADER_KERNEL.img" --verbose
             fi
         fi
     else
-        echo "Please create .conf configuration file(s) with boot options in $EFISTUB_CONFIG_DIRECTORY"
-        sleep 5
+        clear
+        echo "Please create the efistub_boot_parameters.conf configuration file in the /etc/conf.d directory"
+        sleep 2
+    fi
+
+}
+
+edit_configuration() {
+
+    ## Edit configuration file
+
+    if [[ -f "$EFISTUB_CONFIG" ]]; then
+        if [[ ! -z "$EDITOR" ]]; then
+            $EDITOR $EFISTUB_CONFIG
+        else
+            echo "Please make sure to set the EDITOR environment variable to your choice of editor prior to running this option"
+            sleep 2
+        fi
+    else
+        echo "Please create the efistub_boot_parameters.conf configuration file in the /etc/conf.d directory"
+        sleep 2
     fi
 
 }
@@ -95,10 +114,14 @@ delete_boot_entries() {
         if [[ ${delete_selection} =~ ^[0-9]+$  ]]; then
             efibootmgr -b $delete_selection -B
         else
+            clear
             echo "Please type a number with a length of 4 characters"
+            sleep 2
         fi
     else
+        clear
         echo "Please type a number with a length of 4 characters"
+        sleep 2
     fi
 
 }
@@ -113,6 +136,8 @@ if [[ "$USER" == "root" ]]; then
         echo ""
         echo "Create: create a boot entry"
         echo "Delete: remove a boot entry"
+        echo "Configure: edit the boot parameters"
+        echo "Info: shows efiboot manager entries"
         echo "Exit: exit the script"
         echo ""
         read -r -p "Choose an option: " OPTION
@@ -121,11 +146,15 @@ if [[ "$USER" == "root" ]]; then
         if [[ "$OPTION" == "Create" ]]; then
             clear
             create_boot_entry
+        elif [[ "$OPTION" == "Configure" ]]; then
             clear
+            edit_configuration
         elif [[ "$OPTION" == "Delete" ]]; then
             clear
             delete_boot_entries
+        elif [[ "$OPTION" == "Info" ]]; then
             clear
+            efibootmgr | less
         elif [[ "$OPTION" == "Exit" ]]; then
             break
         else
