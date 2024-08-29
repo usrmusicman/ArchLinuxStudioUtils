@@ -2,14 +2,11 @@
 
 # <<-- Globals -->>
 
-# Boot commandline options
-BOOT_OPTIONS="rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$BOOTENTRY_UUID resume=UUID=$BOOTENTRY_UUID loglevel=3 quiet preempt=full threadirqs splash"
-
 # Chaotic AUR PGP Key
 CHAOTIC_KEY=3056513887B78AEB
 
 # ESP system partition directory
-ESP_DIRECTORY="/boot/efi"
+ESP_DIRECTORY="/boot"
 
 ## Start of package lists
 
@@ -26,7 +23,7 @@ NVIDIAGPU_DRV="lib32-nvidia-utils lib32-opencl-nvidia libva-nvidia-driver libva-
 OTHERGPU_DRV="lib32-mesa lib32-libva-mesa-driver libva-mesa-driver libva-utils mesa"
 
 # BASE SYSTEM
-BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub grub-btrfs i2c-tools inotify-tools linux linux-firmware linux-headers man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth pocl power-profiles-daemon pulse-native-provider realtime-privileges rtirq snapper snap-sync sshfs sudo udisks2 udisks2-btrfs update-grub vim vim-runtime wget wireless-regdb wireplumber zram-generator"
+BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts i2c-tools inotify-tools linux linux-firmware linux-headers man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth pocl power-profiles-daemon pulse-native-provider realtime-privileges rtirq snapper snap-sync sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
 
 BASE_SYSTEM_CUSTOM="$DEFAULT_EDITOR $DEFAULT_EDITOR-runtime ${KERNEL} ${KERNEL}-headers"
 
@@ -164,14 +161,38 @@ setup_bootloader() {
     # System root partition UUID
     BOOTENTRY_UUID=`lsblk $SYSTEM_ROOT -o UUID | tr "\n" " " | cut -d " " -f 2`
 
-    # Setup GRUB bootloader
-    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory="${ESP_DIRECTORY}" --bootloader-id="${OS_NAME}" ${SYSTEM_BOOT}
+    # Boot commandline options
+    BOOT_OPTIONS="loglevel=3 quiet preempt=full threadirqs splash"
 
-    # Edit GRUB default configuration file
-    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
+    # EFI Config Vars
+    EFI_CONFIG_DIR="/etc/conf.d"
+    EFI_CONFIG_FILE="efistub_boot_parameters.conf"
 
-    # Create GRUB configuration file
-    arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
+    # Move boot options to a file
+    mkdir -p $EFI_CONFIG_DIR
+    echo $BOOT_OPTIONS > $EFI_CONFIG_DIR/$EFI_CONFIG_FILE
+
+    # Set the boot disk variable
+    if [[ "${ROOT_PARTITION:0:9}" == "/dev/nvme" ]]; then
+        ESP_DISK=${ROOT_PARTITION::-2}
+    else
+        ESP_DISK=${ROOT_PARTITION::-1}
+    fi
+
+    # Create EFIStub boot entries
+    if [[ ! -z "$BOOT_OPTIONS" ]]; then
+        if [[ "$CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
+            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+        elif [[ "$CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
+            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+        else
+            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
+        fi
+    else
+        clear
+        echo "Please create the efistub_boot_parameters.conf configuration file in the /etc/conf.d directory"
+        sleep 2
+    fi
 
 }
 
@@ -358,6 +379,34 @@ partition_mapping() {
 # Make sure to run the script as root
 if [[ "$USER" == "root" ]]; then
 
+    ## Choosse system install disk
+    while :
+    do
+
+        clear
+        echo "Choose System Install Drive..."
+        echo ""
+        lsblk -o PATH,SIZE,TYPE | grep "disk"
+        echo ""
+        read -r -p "Choose partition for the boot loader (i.e. /dev/sda1): " SYSTEM_DISK
+        echo ""
+        read -r -p "Is this the correct boot partition (type yes or no or exit)?: " MENU_OPTION
+
+        # Check if you wanted this to be a boot partition
+        if [[ "${MENU_OPTION}" == "yes" ]]; then
+            break
+        elif [[ "${MENU_OPTION}" == "no" ]]; then
+            clear
+        elif [[ "${MENU_OPTION}" == "exit" ]]; then
+            exit
+        else
+            echo ""
+            echo "Type in a valid option"
+            sleep 2
+        fi
+
+    done
+
     ## Set system boot partition
     while :
     do
@@ -365,7 +414,7 @@ if [[ "$USER" == "root" ]]; then
         clear
         echo "Choose Boot Partition..."
         echo ""
-        lsblk -o PATH,SIZE,TYPE $SYSTEM_DRIVE | grep "part"
+        lsblk -o PATH,SIZE,TYPE $SYSTEM_DISK | grep "part"
         echo ""
         read -r -p "Choose partition for the boot loader (i.e. /dev/sda1): " SYSTEM_BOOT
         echo ""
@@ -393,7 +442,7 @@ if [[ "$USER" == "root" ]]; then
         clear
         echo "Choose Root Partition..."
         echo ""
-        lsblk -o PATH,SIZE,TYPE $SYSTEM_DRIVE | grep "part"
+        lsblk -o PATH,SIZE,TYPE $SYSTEM_DISK | grep "part"
         echo ""
         read -r -p "Choose partition for the root filesystem (i.e. /dev/sda2): " SYSTEM_ROOT
         echo ""
