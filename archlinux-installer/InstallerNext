@@ -14,7 +14,7 @@ ESP_DIRECTORY="/boot"
 AMDGPU_DRV="lib32-libva-mesa-driver lib32-opencl-rusticl-mesa lib32-vulkan-radeon libva-mesa-driver libva-utils opencl-rusticl-mesa rocm-hip-runtime rocm-language-runtime rocm-opencl-runtime rocminfo vulkan-radeon vulkan-mesa-layers"
 
 # INTEL DRIVERS
-INTELGPU_DRV="gst-plugin-qsv intel-compute-runtime intel-media-driver intel-media-sdk lib32-libva-intel-driver lib32-libva-mesa-driver lib32-vulkan-intel lib32-vulkan-mesa-layers libva-intel-driver libva-mesa-driver libva-utils onevpl-intel-gpu vulkan-intel vulkan-mesa-layers"
+INTELGPU_DRV="gst-plugin-qsv intel-compute-runtime intel-media-driver lib32-vulkan-intel lib32-vulkan-mesa-layers libva-utils onevpl-intel-gpu vulkan-intel vulkan-mesa-layers"
 
 # NVIDIA DRIVERS
 NVIDIAGPU_DRV="lib32-nvidia-utils lib32-opencl-nvidia libva-nvidia-driver libva-utils nvidia-dkms nvidia-utils opencl-nvidia"
@@ -28,11 +28,32 @@ BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr 
 BASE_SYSTEM_CUSTOM="$DEFAULT_EDITOR $DEFAULT_EDITOR-runtime ${KERNEL} ${KERNEL}-headers"
 
 # PLASMA DESKTOP
-PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-obex bluez-utils breeze5 btrfs-assistant btrfsmaintenance dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gst-plugins-base lib32-gst-plugins-good lib32-libavtp lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-libsamplerate lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 lib32-speexdsp libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk xorg-xhost yt-dlp"
+PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-obex bluez-utils breeze5 dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gst-plugins-base lib32-gst-plugins-good lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk yt-dlp"
 
 ## End of package lists
 
 # <<-- Functions -->>
+
+btrfs_configuration() {
+
+    # Configure snapper (remember to run as root)
+    echo "#!/bin/sh" > $MOUNT_DIR/first_run.sh
+    echo "umount -lf /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "rm -rf /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "pacman -S --noconfirm btrfs-assistant btrfsmaintenance snapper snap-pac snap-sync" >> $MOUNT_DIR/first_run.sh
+    echo "snapper -c root create-config /" >> $MOUNT_DIR/first_run.sh
+    echo "rm -rf /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "mkdir -p /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "chmod 750 /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "chown :wheel /.snapshots" >> $MOUNT_DIR/first_run.sh
+    echo "rm $MOUNT_DIR/first_run.sh" >> $MOUNT_DIR/first_run.sh
+
+    # Make executable
+    chmod 755 $MOUNT_DIR/first_run.sh
+
+}
 
 initialize_base_system() {
 
@@ -136,27 +157,33 @@ setup_base_system() {
 
 }
 
-post_install_configuration() {
+setup_bootloader_grub() {
 
-    # Configure snapper (remember to run as root)
-    echo "#!/bin/sh" > $MOUNT_DIR/first_run.sh
-    echo "umount /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "rm -rf /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "snapper -c root create-config /" >> $MOUNT_DIR/first_run.sh
-    echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "mkdir -p /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "chmod 750 /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "chown :wheel /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/first_run.sh
-    echo "rm $MOUNT_DIR/first_run.sh" >> $MOUNT_DIR/first_run.sh
+    # System root partition UUID
+    BOOTENTRY_UUID=`lsblk $SYSTEM_ROOT -o UUID | tr "\n" " " | cut -d " " -f 2`
 
-    # Make executable
-    chmod 755 $MOUNT_DIR/first_run.sh
+    # Setup GRUB bootloader
+    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory="${ESP_DIRECTORY}" --bootloader-id="${OS_NAME}" ${SYSTEM_BOOT}
+
+    # Check partition type
+    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+        # Edit GRUB default configuration file
+        sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
+        # Install BTRFS GRUB Packages
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm grub-btrfs
+        # Configure BTRFS GRUB
+        arch-chroot $MOUNT_DIR systemctl enable grub-btrfsd.service
+    elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+        # Edit GRUB default configuration file
+        sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
+    fi
+
+    # Create GRUB configuration file
+    arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
 
 }
 
-setup_bootloader() {
+setup_bootloader_efistub() {
 
     # System root partition UUID
     BOOTENTRY_UUID=`lsblk $SYSTEM_ROOT -o UUID | tr "\n" " " | cut -d " " -f 2`
@@ -181,12 +208,27 @@ setup_bootloader() {
 
     # Create EFIStub boot entries
     if [[ ! -z "$BOOT_OPTIONS" ]]; then
+        # Check CPU Vendor
         if [[ "$CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
-            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            # Check partition type
+            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            fi
         elif [[ "$CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
-            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            # Check partition type
+            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
+            fi
         else
-            efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
+            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
+            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+                efibootmgr --create --disk $ESP_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$SYSTEM_ROOT resume=UUID=$SYSTEM_ROOT $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
+            fi
         fi
     else
         clear
@@ -308,26 +350,47 @@ setup_user_account() {
 
 }
 
-partition_drive() {
-
-    # Create A BTRFS root partition
-    mkfs.btrfs -f $SYSTEM_ROOT
+partition_boot() {
 
     # Create A UEFI Boot Partition
     mkfs.vfat -F32 $SYSTEM_BOOT
-
-    # Label BTRFS root partition
-    btrfs filesystem label $SYSTEM_ROOT "$OS_NAME"
 
     # Label Boot Partition
     fatlabel $SYSTEM_BOOT ESP
 
 }
 
-partition_mapping() {
+partition_root_btrfs() {
 
-    # Make system mountpoint directory
-    mkdir -p $MOUNT_DIR
+    # Create A BTRFS root partition
+    mkfs.btrfs -f $SYSTEM_ROOT
+
+    # Label BTRFS root partition
+    btrfs filesystem label $SYSTEM_ROOT "$OS_NAME"
+
+}
+
+partition_root_ext4() {
+
+    # Create A BTRFS root partition
+    mkfs.ext4 -f $SYSTEM_ROOT
+
+    # Label EXT4 root partition
+    e2label $SYSTEM_ROOT "$OS_NAME"
+
+}
+
+partition_mapping_boot() {
+
+    # Make /boot directory
+    mkdir -p $MOUNT_DIR/$ESP_DIRECTORY
+
+    # Mount the efi partition
+    mount $SYSTEM_BOOT $MOUNT_DIR/$ESP_DIRECTORY
+
+}
+
+partition_mapping_btrfs() {
 
     # Mount root filesystem
     mount -t btrfs $SYSTEM_ROOT $MOUNT_DIR
@@ -366,11 +429,12 @@ partition_mapping() {
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@tmp $SYSTEM_ROOT $MOUNT_DIR/tmp
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@var $SYSTEM_ROOT $MOUNT_DIR/var
 
-    # Make /boot directory
-    mkdir -p $MOUNT_DIR/$ESP_DIRECTORY
+}
 
-    # Mount the efi partition
-    mount $SYSTEM_BOOT $MOUNT_DIR/$ESP_DIRECTORY
+partition_mapping_ext4() {
+
+    # Mount root filesystem
+    mount -t ext4 $SYSTEM_ROOT $MOUNT_DIR
 
 }
 
@@ -451,6 +515,80 @@ if [[ "$USER" == "root" ]]; then
         # Check if you wanted this to be a root partition
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
+        elif [[ "${MENU_OPTION}" == "no" ]]; then
+            clear
+        elif [[ "${MENU_OPTION}" == "exit" ]]; then
+            exit
+        else
+            echo ""
+            echo "Type in a valid option"
+            sleep 2
+        fi
+
+    done
+
+    ## Set system partition type
+    while :
+    do
+
+        clear
+        echo "Choose Partition Type..."
+        echo ""
+        lsblk -o PATH,SIZE,TYPE $SYSTEM_DISK | grep "part"
+        echo ""
+        read -r -p "Choose the bootloader to install (i.e. btrfs or ext4): " PARTITION_TYPE
+        echo ""
+        read -r -p "Is this the correct partition type (type yes or no or exit)?: " MENU_OPTION
+
+        # Check if you wanted this to be boot loader
+        if [[ "${MENU_OPTION}" == "yes" ]]; then
+            # Check the partition type
+            if [[ "$BOOTLOADER_TYPE" == "btrfs" ]]; then
+                break
+            elif [[ "$BOOTLOADER_TYPE" == "ext4" ]]; then
+                break
+            else
+                echo ""
+                echo "Type in a partition type"
+                sleep 2
+            fi
+        elif [[ "${MENU_OPTION}" == "no" ]]; then
+            clear
+        elif [[ "${MENU_OPTION}" == "exit" ]]; then
+            exit
+        else
+            echo ""
+            echo "Type in a valid option"
+            sleep 2
+        fi
+
+    done
+
+    ## Set system bootloader
+    while :
+    do
+
+        clear
+        echo "Choose Boot Loader..."
+        echo ""
+        lsblk -o PATH,SIZE,TYPE $SYSTEM_DISK | grep "part"
+        echo ""
+        read -r -p "Choose the bootloader to install (i.e. efistub or grub): " BOOTLOADER_TYPE
+        echo ""
+        read -r -p "Is this the correct boot loader (type yes or no or exit)?: " MENU_OPTION
+
+        # Check if you wanted this to be your boot loader
+        if [[ "${MENU_OPTION}" == "yes" ]]; then
+            # Check the partition type
+            if [[ "$BOOTLOADER_TYPE" == "efistub" ]]; then
+                break
+            elif [[ "$BOOTLOADER_TYPE" == "grub" ]]; then
+                break
+            else
+                echo ""
+                echo "Type in a valid bootloader"
+                sleep 2
+            fi
         elif [[ "${MENU_OPTION}" == "no" ]]; then
             clear
         elif [[ "${MENU_OPTION}" == "exit" ]]; then
@@ -618,8 +756,15 @@ if [[ "$USER" == "root" ]]; then
 
     ## Partition system
     clear
-    partition_drive
-    partition_mapping
+    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+        partition_root_btrfs
+        partition_mapping_btrfs
+    elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+        partition_root_ext4
+        partition_mapping_ext4
+    fi
+    partition_boot
+    partition_mapping_boot
     echo ""
     echo "Partitioned System..."
     sleep 5
@@ -631,6 +776,13 @@ if [[ "$USER" == "root" ]]; then
     initialize_computer_settings
     echo ""
     echo "Created Initial System..."
+    sleep 5
+
+    ## Create post install script for btrfs
+    clear
+    btrfs_configuration
+    echo ""
+    echo "Run post install script in the / directory as root after reboot to get snapper working"
     sleep 5
 
     ## CPU microcode install
@@ -725,16 +877,13 @@ if [[ "$USER" == "root" ]]; then
 
     ## Configure the bootloader
     clear
-    setup_bootloader
+    if [[ $BOOTLOADER_TYPE == "efistub" ]]; then
+        setup_bootloader_efistub
+    elif [[ $BOOTLOADER_TYPE == "grub" ]]; then
+        setup_bootloader_grub
+    fi
     echo ""
-    echo "Setup The Bootloader..."
-    sleep 5
-
-    ## Create post install script
-    clear
-    post_install_configuration
-    echo ""
-    echo "Run post install script in the / directory as root after reboot to get snapper working"
+    echo "Bootloader Configured..."
     sleep 5
 
     ## Choose desktop environment
