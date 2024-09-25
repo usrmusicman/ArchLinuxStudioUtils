@@ -8,22 +8,22 @@ CHAOTIC_KEY=3056513887B78AEB
 ## Start of package lists
 
 # AMD DRIVERS
-AMDGPU_DRV="lib32-libva-mesa-driver lib32-opencl-rusticl-mesa lib32-vulkan-radeon libva-mesa-driver libva-utils opencl-rusticl-mesa rocm-hip-runtime rocm-language-runtime rocm-opencl-runtime rocminfo vulkan-radeon vulkan-mesa-layers"
+AMDGPU_DRV="lib32-libva-mesa-driver lib32-mesa lib32-opencl-rusticl-mesa lib32-vulkan-radeon libva-mesa-driver libva-utils mesa opencl-rusticl-mesa rocm-hip-runtime rocm-language-runtime rocm-opencl-runtime rocminfo vulkan-radeon vulkan-mesa-layers"
 
 # INTEL DRIVERS
-INTELGPU_DRV="gst-plugin-qsv intel-compute-runtime intel-media-driver lib32-vulkan-intel lib32-vulkan-mesa-layers libva-utils onevpl-intel-gpu vulkan-intel vulkan-mesa-layers"
+INTELGPU_DRV="gst-plugin-qsv intel-compute-runtime intel-media-driver lib32-mesa lib32-vulkan-intel lib32-vulkan-mesa-layers libva-utils mesa onevpl-intel-gpu vulkan-intel vulkan-mesa-layers"
 
 # NVIDIA DRIVERS
 NVIDIAGPU_DRV="lib32-nvidia-utils lib32-opencl-nvidia libva-nvidia-driver libva-utils nvidia-dkms nvidia-utils opencl-nvidia"
 
 # OTHER DRIVERS
-OTHERGPU_DRV="lib32-mesa lib32-libva-mesa-driver libva-mesa-driver libva-utils mesa"
+OTHERGPU_DRV="lib32-mesa lib32-libva-mesa-driver lib32-vulkan-swrast lib32-vulkan-virtio libva-mesa-driver libva-utils mesa vulkan-virtio vulkan-swrast"
 
 # BASE SYSTEM
-BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools linux-firmware man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs update-grub vim vim-runtime wget wireless-regdb wireplumber zram-generator"
+BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools linux-firmware man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
 
 # PLASMA DESKTOP
-PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-good lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra octopi openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk yt-dlp"
+PLASMA_DESKTOP="appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-good lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk yt-dlp"
 
 ## End of package lists
 
@@ -38,7 +38,7 @@ btrfs_configuration() {
     echo "umount -lf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "pacman -Syyuu --noconfirm btrfs-assistant grub-btrfs snap-pac snap-pac-grub snap-sync snapper snapper-support" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm grub-btrfs snap-pac snap-sync snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "mkdir -p /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
@@ -58,14 +58,6 @@ initialize_base_system() {
     # Create bootstrap enviornment
     pacstrap $MOUNT_DIR base base-devel
 
-    # Add Chaotic AUR Key
-    arch-chroot $MOUNT_DIR pacman-key --recv-key ${CHAOTIC_KEY} --keyserver keyserver.ubuntu.com
-    arch-chroot $MOUNT_DIR pacman-key --lsign-key ${CHAOTIC_KEY}
-
-    # Add Chaotic AUR Repo
-    arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-    arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-
     # Install pacman.conf
     install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
 
@@ -74,9 +66,8 @@ initialize_base_system() {
 
     # Initialize pacman-keyring (chroot)
     arch-chroot $MOUNT_DIR pacman-key --init
-    arch-chroot $MOUNT_DIR pacman-key --populate archlinux chaotic
+    arch-chroot $MOUNT_DIR pacman-key --populate archlinux
     arch-chroot $MOUNT_DIR pacman-key --lsign-key archlinux
-    arch-chroot $MOUNT_DIR pacman-key --lsign-key chaotic
 
     # Generate filesystem mounts
     genfstab -U $MOUNT_DIR > $MOUNT_DIR/etc/fstab
