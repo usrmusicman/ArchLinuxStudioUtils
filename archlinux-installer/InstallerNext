@@ -20,10 +20,10 @@ NVIDIAGPU_DRV="lib32-nvidia-utils lib32-opencl-nvidia libva-nvidia-driver libva-
 OTHERGPU_DRV="lib32-mesa lib32-libva-mesa-driver libva-mesa-driver libva-utils mesa"
 
 # BASE SYSTEM
-BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts i2c-tools inotify-tools linux-firmware man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth pocl power-profiles-daemon pulse-native-provider realtime-privileges rtirq sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
+BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools linux-firmware man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs update-grub vim vim-runtime wget wireless-regdb wireplumber zram-generator"
 
 # PLASMA DESKTOP
-PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-obex bluez-utils breeze5 dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gst-plugins-base lib32-gst-plugins-good lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk yt-dlp"
+PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-fluidsynth lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-good lib32-libdbusmenu-gtk2 lib32-libdbusmenu-gtk3 lib32-mangohud lib32-pipewire-jack lib32-pipewire-v4l2 lib32-sdl2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra octopi openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle steam steam-native-runtime switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk yt-dlp"
 
 ## End of package lists
 
@@ -31,22 +31,25 @@ PLASMA_DESKTOP="7-zip appmenu-gtk-module ark bluez bluez-obex bluez-utils breeze
 
 btrfs_configuration() {
 
-    # Configure snapper (remember to run as root)
-    echo "#!/bin/sh" > $MOUNT_DIR/first_run.sh
-    echo "umount -lf /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "rm -rf /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "pacman -S --noconfirm btrfs-assistant btrfsmaintenance snapper snap-pac snap-sync" >> $MOUNT_DIR/first_run.sh
-    echo "snapper -c root create-config /" >> $MOUNT_DIR/first_run.sh
-    echo "rm -rf /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "mkdir -p /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "chmod 750 /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "chown :wheel /.snapshots" >> $MOUNT_DIR/first_run.sh
-    echo "rm first_run.sh" >> $MOUNT_DIR/first_run.sh
+    # Create snapper support script (remember to run as root)
+    mkdir -p $MOUNT_DIR/etc/skel/Desktop
+    echo "if [[ \"$USER\" == \"root\" ]]; then" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "#!/bin/sh" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "umount -lf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm btrfs-assistant grub-btrfs snap-pac snap-pac-grub snap-sync snapper snapper-support" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "mkdir -p /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "chown :wheel /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "rm first_run.sh" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "fi" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
 
     # Make executable
-    chmod 755 $MOUNT_DIR/first_run.sh
+    chmod 755 $MOUNT_DIR/etc/skel/Desktop/first_run.sh
 
 }
 
@@ -118,6 +121,36 @@ initialize_computer_settings() {
     # Set hostname
     echo "$HOSTNAME" > $MOUNT_DIR/etc/hostname
 
+    # Create flathub repo configuration script
+    mkdir -p $MOUNT_DIR/etc/skel/Desktop
+    echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    echo "flatpak remote-add --if-not-exists flathub-user https://dl.flathub.org/repo/flathub.flatpakrepo --user" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    echo "pkexec --user root flatpak remote-delete flathub" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    echo "rm $HOME/Desktop/enable_flatpak_as_user.sh" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    chmod 755 $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+
+    ## Pro audio/video configuration
+
+    # Set system swappiness
+    echo "vm.swappiness = 10" > $MOUNT_DIR/etc/sysctl.d/90-swappiness.conf
+
+    # Set system maximum inotify watches
+    echo "fs.inotify.max_user_watches = 600000" > $MOUNT_DIR/etc/sysctl.d/90-max_user_watches.conf
+
+    # Set the maximum value for the RTC timer
+    echo "echo 2048 > /sys/class/rtc/rtc0/max_user_freq" > $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
+    echo "echo 2048 > /proc/sys/dev/hpet/max-user-freq" >> $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
+    chmod 755 $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
+
+    # Generate a start up service for the RTC timer tweak
+    echo "[Unit]" > $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "Description=RTC Timer Tweak" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "[Service]" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "ExecStart=/usr/local/bin/max_rtc_timer.sh" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "[Install]" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
+    echo "WantedBy=multi-user.target" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
 }
 
 initialize_pacman() {
@@ -143,75 +176,15 @@ setup_base_system() {
     # Enable system services
     arch-chroot $MOUNT_DIR systemctl enable avahi-daemon.service
     arch-chroot $MOUNT_DIR systemctl enable avahi-dnsconfd.service
-    arch-chroot $MOUNT_DIR systemctl enable fstrim.timer
     arch-chroot $MOUNT_DIR systemctl enable NetworkManager.service
+    arch-chroot $MOUNT_DIR systemctl enable rtc_timer_tweak.service
     arch-chroot $MOUNT_DIR systemctl enable rtirq.service
     arch-chroot $MOUNT_DIR systemctl enable rtirq-resume.service
     arch-chroot $MOUNT_DIR systemctl enable rtkit-daemon.service
 
 }
 
-setup_bootloader_efistub() {
-
-    # ESP system partition directory
-    ESP_DIRECTORY="/boot"
-
-    # Make ESP directory
-    mkdir -p $MOUNT_DIR/$ESP_DIRECTORY
-
-    # Mount ESP Directory
-    mount -t vfat $SYSTEM_BOOT $MOUNT_DIR/$ESP_DIRECTORY
-
-    # System root partition UUID
-    ROOT_UUID=`lsblk $SYSTEM_ROOT -o UUID | tr "\n" " " | cut -d " " -f 2`
-
-    # Boot commandline options
-    BOOT_OPTIONS="loglevel=3 quiet preempt=full threadirqs splash"
-
-    # EFI Config Vars
-    EFI_CONFIG_DIR="/etc/conf.d"
-    EFI_CONFIG_FILE="efistub_boot_parameters.conf"
-
-    # Move boot options to a file
-    mkdir -p $EFI_CONFIG_DIR
-    echo $BOOT_OPTIONS > $EFI_CONFIG_DIR/$EFI_CONFIG_FILE
-
-    # Create EFIStub boot entries
-    if [[ ! -z "$BOOT_OPTIONS" ]]; then
-        # Check CPU Vendor
-        if [[ "$CPU" == "AuthenticAMD" ]] && [[ -f /boot/amd-ucode.img ]]; then
-            # Check partition type
-            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
-            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\amd-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
-            fi
-        elif [[ "$CPU" == "GenuineIntel" ]] && [[ -f /boot/intel-ucode.img ]]; then
-            # Check partition type
-            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
-            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\intel-ucode.img initrd=\initramfs-$KERNEL.img" --verbose
-            fi
-        else
-            if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
-            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
-                efibootmgr --create --disk $SYSTEM_DISK --part 1 --label "${OS_NAME}_${KERNEL}" --loader /vmlinuz-$KERNEL --unicode " root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID $BOOT_OPTIONS initrd=\initramfs-$KERNEL.img" --verbose
-            fi
-        fi
-    else
-        clear
-        echo "Please create the efistub_boot_parameters.conf configuration file in the /etc/conf.d directory"
-        sleep 2
-    fi
-
-}
-
-setup_bootloader_grub() {
-
-    # Install grub package(s)
-    arch-chroot $MOUNT_DIR pacman -S --noconfirm grub
+setup_bootloader() {
 
     # ESP system partition directory
     ESP_DIRECTORY="/boot/efi"
@@ -332,6 +305,8 @@ setup_plasma_desktop() {
 
     # Enable system services
     arch-chroot $MOUNT_DIR systemctl enable bluetooth.service
+    arch-chroot $MOUNT_DIR systemctl enable cups.service
+    arch-chroot $MOUNT_DIR systemctl enable cups-browsed.service
     arch-chroot $MOUNT_DIR systemctl enable power-profiles-daemon.service
     arch-chroot $MOUNT_DIR systemctl enable sddm.service
 
@@ -549,41 +524,6 @@ if [[ "$USER" == "root" ]]; then
             else
                 echo ""
                 echo "Type in a partition type"
-                sleep 2
-            fi
-        elif [[ "${MENU_OPTION}" == "no" ]]; then
-            clear
-        elif [[ "${MENU_OPTION}" == "exit" ]]; then
-            exit
-        else
-            echo ""
-            echo "Type in a valid option"
-            sleep 2
-        fi
-
-    done
-
-    ## Set system bootloader
-    while :
-    do
-
-        clear
-        echo "Choose Boot Loader..."
-        echo ""
-        read -r -p "Choose the bootloader to install (i.e. efistub or grub): " BOOTLOADER_TYPE
-        echo ""
-        read -r -p "Is this the correct boot loader (type yes or no or exit)?: " MENU_OPTION
-
-        # Check if you wanted this to be your boot loader
-        if [[ "${MENU_OPTION}" == "yes" ]]; then
-            # Check the partition type
-            if [[ "$BOOTLOADER_TYPE" == "efistub" ]]; then
-                break
-            elif [[ "$BOOTLOADER_TYPE" == "grub" ]]; then
-                break
-            else
-                echo ""
-                echo "Type in a valid bootloader"
                 sleep 2
             fi
         elif [[ "${MENU_OPTION}" == "no" ]]; then
@@ -890,19 +830,9 @@ if [[ "$USER" == "root" ]]; then
     setup_base_system
     setup_locale
     setup_user_account
+    setup_bootloader
     echo ""
     echo "Installed The Base System..."
-    sleep 5
-
-    ## Configure the bootloader
-    clear
-    if [[ $BOOTLOADER_TYPE == "efistub" ]]; then
-        setup_bootloader_efistub
-    elif [[ $BOOTLOADER_TYPE == "grub" ]]; then
-        setup_bootloader_grub
-    fi
-    echo ""
-    echo "Bootloader Configured..."
     sleep 5
 
     ## Choose desktop environment
