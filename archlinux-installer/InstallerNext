@@ -175,13 +175,13 @@ setup_base_system() {
 setup_bootloader() {
 
     # ESP system partition directory
-    ESP_DIRECTORY="/boot/efi"
+    ESP_DIRECTORY="${MOUNT_DIR}/boot/efi"
 
     # Make ESP directory
-    mkdir -p $MOUNT_DIR/$ESP_DIRECTORY
+    mkdir -p $ESP_DIRECTORY
 
     # Mount ESP Directory
-    mount $SYSTEM_BOOT $MOUNT_DIR/$ESP_DIRECTORY
+    mount $SYSTEM_BOOT $ESP_DIRECTORY
 
     # System root partition UUID
     ROOT_UUID=`lsblk $SYSTEM_ROOT -o UUID | tr "\n" " " | cut -d " " -f 2`
@@ -190,7 +190,7 @@ setup_bootloader() {
     BOOT_OPTIONS="loglevel=3 quiet preempt=full threadirqs splash"
 
     # Setup GRUB bootloader
-    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory="${ESP_DIRECTORY}" --bootloader-id="${OS_NAME}" ${SYSTEM_BOOT}
+    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory="${ESP_DIRECTORY/${MOUNT_DIR}/}" --bootloader-id="${OS_NAME}" ${SYSTEM_BOOT}
 
     # Check partition type
     if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
@@ -351,6 +351,13 @@ partition_root_ext4() {
 
     # Label EXT4 root partition
     e2label $SYSTEM_ROOT "$OS_NAME"
+
+}
+
+partition_mapping_boot() {
+
+    # Boot partition mapping
+
 
 }
 
