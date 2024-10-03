@@ -2,7 +2,7 @@
 Type=Application
 Version=1.0
 Name=Pipewire Control Center
-Comment=Configure pipewire and AV applications
+Comment=Pipewire and AV application control
 Exec=/usr/bin/pipewire_control_center
 Icon=/usr/share/icons/breeze/apps/48/system-run.svg
 Categories=AudioVideo;X-AudioEditing;Qt;
