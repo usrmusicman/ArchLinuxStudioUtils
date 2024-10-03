@@ -42,13 +42,13 @@ zenity_pipewire_session() {
 
 launch_logic() {
     if [[ "$APPLICATION_CHOICE" == "Ardour" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 ardour8
+        WINEFSYNC=1 XDG_SESSION_TYPE=x11 ardour8 > /dev/null
     elif [[ "$APPLICATION_CHOICE" == "Carla" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 carla
+        WINEFSYNC=1 XDG_SESSION_TYPE=x11 carla > /dev/null
     elif [[ "$APPLICATION_CHOICE" == "QTractor" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 qtractor
+        WINEFSYNC=1 XDG_SESSION_TYPE=x11 qtractor > /dev/null
     elif [[ "$APPLICATION_CHOICE" == "REAPER" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 reaper
+        WINEFSYNC=1 XDG_SESSION_TYPE=x11 reaper > /dev/null
     fi
 }
 
