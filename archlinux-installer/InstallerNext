@@ -50,24 +50,68 @@ btrfs_configuration() {
 
 }
 
-initialize_base_system() {
+initialize_system() {
 
-    # Create bootstrap enviornment
-    pacstrap $MOUNT_DIR base base-devel
+    # Refresh package database (Live environment)
+    pacman -Syy
 
-    # Install pacman.conf
-    install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
+    # Install new archlinux keyring
+    pacman -S --noconfirm archlinux-keyring
 
-    # Refresh package database (Chroot)
-    arch-chroot $MOUNT_DIR pacman -Syy
+    # Initialize pacman-keyring
+    pacman-key --init
+    pacman-key --populate archlinux
+    pacman-key --lsign-key archlinux
 
-    # Initialize pacman-keyring (chroot)
-    arch-chroot $MOUNT_DIR pacman-key --init
-    arch-chroot $MOUNT_DIR pacman-key --populate archlinux
-    arch-chroot $MOUNT_DIR pacman-key --lsign-key archlinux
+    if [[ "$CHAOTIC" == "yes" ]]; then
+
+        # Chaotic Key Signature
+        CHAOTIC_KEYSIG="3056513887B78AEB"
+
+        # Create bootstrap enviornment
+        pacstrap $MOUNT_DIR base base-devel
+
+        # Recover Chaotic key signatures
+        arch-chroot $MOUNT_DIR pacman-key --recv-key ${CHAOTIC_KEYSIG} --keyserver keyserver.ubuntu.com
+        arch-chroot $MOUNT_DIR pacman-key --lsign-key ${CHAOTIC_KEYSIG}
+
+        # Install pacman.conf
+        install -Dm644 pacman.conf.chaotic $MOUNT_DIR/etc/pacman.conf
+
+        # Install Chaotic repo packages
+        arch-chroot $MOUNT_DIR pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
+        arch-chroot $MOUNT_DIR pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+
+        # Refresh package database (Chroot)
+        arch-chroot $MOUNT_DIR pacman -Syy
+
+    else
+
+        # Create bootstrap enviornment
+        pacstrap $MOUNT_DIR base base-devel
+
+        # Install pacman.conf
+        install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
+
+        # Refresh package database (Chroot)
+        arch-chroot $MOUNT_DIR pacman -Syy
+
+    fi
 
     # Generate filesystem mounts
     genfstab -U $MOUNT_DIR > $MOUNT_DIR/etc/fstab
+
+    # Install Base System
+    arch-chroot $MOUNT_DIR pacman -S --noconfirm $BASE_SYSTEM ${KERNEL} ${KERNEL}-headers
+
+    # Enable system services
+    arch-chroot $MOUNT_DIR systemctl enable avahi-daemon.service
+    arch-chroot $MOUNT_DIR systemctl enable avahi-dnsconfd.service
+    arch-chroot $MOUNT_DIR systemctl enable NetworkManager.service
+    arch-chroot $MOUNT_DIR systemctl enable rtc_timer_tweak.service
+    arch-chroot $MOUNT_DIR systemctl enable rtirq.service
+    arch-chroot $MOUNT_DIR systemctl enable rtirq-resume.service
+    arch-chroot $MOUNT_DIR systemctl enable rtkit-daemon.service
 
 }
 
@@ -125,6 +169,9 @@ initialize_computer_settings() {
     # Set system maximum inotify watches
     echo "fs.inotify.max_user_watches = 600000" > $MOUNT_DIR/etc/sysctl.d/90-max_user_watches.conf
 
+    # Set maximum virtual memory map areas
+    echo "vm.max_map_count = 2147483642" > $MOUNT_DIR/proc/sys/vm/max_map_count
+
     # Set the maximum value for the RTC timer
     echo "echo 2048 > /sys/class/rtc/rtc0/max_user_freq" > $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
     echo "echo 2048 > /proc/sys/dev/hpet/max-user-freq" >> $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
@@ -139,37 +186,6 @@ initialize_computer_settings() {
     echo "" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
     echo "[Install]" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
     echo "WantedBy=multi-user.target" >> $MOUNT_DIR/etc/systemd/system/rtc_timer_tweak.service
-}
-
-initialize_pacman() {
-
-    # Refresh package database (Live environment)
-    pacman -Syy
-
-    # Install new archlinux keyring
-    pacman -S --noconfirm archlinux-keyring
-
-    # Initialize pacman-keyring
-    pacman-key --init
-    pacman-key --populate archlinux
-    pacman-key --lsign-key archlinux
-
-}
-
-setup_base_system() {
-
-    # Install Base System
-    arch-chroot $MOUNT_DIR pacman -S --noconfirm $BASE_SYSTEM ${KERNEL} ${KERNEL}-headers
-
-    # Enable system services
-    arch-chroot $MOUNT_DIR systemctl enable avahi-daemon.service
-    arch-chroot $MOUNT_DIR systemctl enable avahi-dnsconfd.service
-    arch-chroot $MOUNT_DIR systemctl enable NetworkManager.service
-    arch-chroot $MOUNT_DIR systemctl enable rtc_timer_tweak.service
-    arch-chroot $MOUNT_DIR systemctl enable rtirq.service
-    arch-chroot $MOUNT_DIR systemctl enable rtirq-resume.service
-    arch-chroot $MOUNT_DIR systemctl enable rtkit-daemon.service
-
 }
 
 setup_bootloader() {
@@ -351,13 +367,6 @@ partition_root_ext4() {
 
     # Label EXT4 root partition
     e2label $SYSTEM_ROOT "$OS_NAME"
-
-}
-
-partition_mapping_boot() {
-
-    # Boot partition mapping
-
 
 }
 
@@ -662,16 +671,16 @@ if [[ "$USER" == "root" ]]; then
 
     done
 
-    ## Type in a name for your operating system
+    ## Type in the name for the kernel you want to use
     while :
     do
 
         clear
-        read -r -p "Type in an operating system name (i.e Archlinux): " OS_NAME
+        read -r -p "Type in the kernel name you want to use (i.e linux-zen): " KERNEL
         echo ""
-        read -r -p "Is this the correct Operating System name (type yes or no or exit)?: " MENU_OPTION
+        read -r -p "Is this the correct linux kernel name (type yes or no or exit)?: " MENU_OPTION
 
-        # Check if you wanted this to be your Operating System name
+        # Check if you wanted this to be your system kernel name
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
         elif [[ "${MENU_OPTION}" == "no" ]]; then
@@ -686,16 +695,40 @@ if [[ "$USER" == "root" ]]; then
 
     done
 
-    ## Type in the name for the kernel you want to use
+    ## Type in yes or no if you want to use the chaotic repo
     while :
     do
 
         clear
-        read -r -p "Type in the kernel name you want to use (i.e linux-zen): " KERNEL
+        read -r -p "Do you want to use the chaotic repo (type yes or no)?: " CHAOTIC
         echo ""
         read -r -p "Is this the correct linux kernel name (type yes or no or exit)?: " MENU_OPTION
 
-        # Check if you wanted this to be your system kernel name
+        # Check if you wanted to use the chaotic repo
+        if [[ "${MENU_OPTION}" == "yes" ]]; then
+            break
+        elif [[ "${MENU_OPTION}" == "no" ]]; then
+            clear
+        elif [[ "${MENU_OPTION}" == "exit" ]]; then
+            exit
+        else
+            echo ""
+            echo "Type in a valid option"
+            sleep 2
+        fi
+
+    done
+
+    ## Type in a name for your operating system
+    while :
+    do
+
+        clear
+        read -r -p "Type in an operating system name (i.e Archlinux): " OS_NAME
+        echo ""
+        read -r -p "Is this the correct Operating System name (type yes or no or exit)?: " MENU_OPTION
+
+        # Check if you wanted this to be your Operating System name
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
         elif [[ "${MENU_OPTION}" == "no" ]]; then
@@ -726,8 +759,7 @@ if [[ "$USER" == "root" ]]; then
 
     ## Intialize the bootstrap environment
     clear
-    initialize_pacman
-    initialize_base_system
+    initialize_system
     initialize_computer_settings
     echo ""
     echo "Created Initial System..."
