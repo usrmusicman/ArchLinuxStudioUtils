@@ -695,16 +695,16 @@ if [[ "$USER" == "root" ]]; then
 
     done
 
-    ## Type in yes or no if you want to use the chaotic repo
+    ## Type in a name for your operating system
     while :
     do
 
         clear
-        read -r -p "Do you want to use the chaotic repo (type yes or no)?: " CHAOTIC
+        read -r -p "Type in an operating system name (i.e Archlinux): " OS_NAME
         echo ""
-        read -r -p "Is this the correct linux kernel name (type yes or no or exit)?: " MENU_OPTION
+        read -r -p "Is this the correct Operating System name (type yes or no or exit)?: " MENU_OPTION
 
-        # Check if you wanted to use the chaotic repo
+        # Check if you wanted this to be your Operating System name
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
         elif [[ "${MENU_OPTION}" == "no" ]]; then
@@ -719,16 +719,16 @@ if [[ "$USER" == "root" ]]; then
 
     done
 
-    ## Type in a name for your operating system
+    ## Type in yes or no if you want to use the chaotic repo
     while :
     do
 
         clear
-        read -r -p "Type in an operating system name (i.e Archlinux): " OS_NAME
+        read -r -p "Do you want to use the chaotic repo (type yes or no)?: " CHAOTIC
         echo ""
-        read -r -p "Is this the correct Operating System name (type yes or no or exit)?: " MENU_OPTION
+        read -r -p "Is this the correct linux kernel name (type yes or no or exit)?: " MENU_OPTION
 
-        # Check if you wanted this to be your Operating System name
+        # Check if you wanted to use the chaotic repo
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
         elif [[ "${MENU_OPTION}" == "no" ]]; then
