@@ -30,12 +30,13 @@ btrfs_configuration() {
 
     # Create snapper support script (remember to run as root)
     mkdir -p $MOUNT_DIR/etc/skel/Desktop
-    echo "if [[ \"$USER\" == \"root\" ]]; then" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "#!/bin/sh" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo 'if [[ "$USER" == "root" ]]; then' >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "umount -lf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "pacman -Syyuu --noconfirm grub-btrfs snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "mkdir -p /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
@@ -63,32 +64,29 @@ initialize_system() {
     pacman-key --populate archlinux
     pacman-key --lsign-key archlinux
 
+    # Create bootstrap enviornment
+    pacstrap $MOUNT_DIR base base-devel
+
     if [[ "$CHAOTIC" == "yes" ]]; then
 
         # Chaotic Key Signature
         CHAOTIC_KEYSIG="3056513887B78AEB"
 
-        # Create bootstrap enviornment
-        pacstrap $MOUNT_DIR base base-devel
-
         # Recover Chaotic key signatures
         arch-chroot $MOUNT_DIR pacman-key --recv-key ${CHAOTIC_KEYSIG} --keyserver keyserver.ubuntu.com
         arch-chroot $MOUNT_DIR pacman-key --lsign-key ${CHAOTIC_KEYSIG}
 
+        # Install Chaotic repo packages
+        arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
+        arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+
         # Install pacman.conf
         install -Dm644 pacman.conf.chaotic $MOUNT_DIR/etc/pacman.conf
-
-        # Install Chaotic repo packages
-        arch-chroot $MOUNT_DIR pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-        arch-chroot $MOUNT_DIR pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
         # Refresh package database (Chroot)
         arch-chroot $MOUNT_DIR pacman -Syy
 
     else
-
-        # Create bootstrap enviornment
-        pacstrap $MOUNT_DIR base base-devel
 
         # Install pacman.conf
         install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
@@ -163,14 +161,14 @@ initialize_computer_settings() {
 
     ## Pro audio/video configuration
 
-    # Set system swappiness
-    echo "vm.swappiness = 10" > $MOUNT_DIR/etc/sysctl.d/90-swappiness.conf
+    # Set maximum virtual memory map areas
+    echo "vm.max_map_count = 2147483642" > $MOUNT_DIR/etc/sysctl.d/90-max_map_count.conf
 
     # Set system maximum inotify watches
     echo "fs.inotify.max_user_watches = 600000" > $MOUNT_DIR/etc/sysctl.d/90-max_user_watches.conf
 
-    # Set maximum virtual memory map areas
-    echo "vm.max_map_count = 2147483642" > $MOUNT_DIR/proc/sys/vm/max_map_count
+    # Set system swappiness
+    echo "vm.swappiness = 10" > $MOUNT_DIR/etc/sysctl.d/90-swappiness.conf
 
     # Set the maximum value for the RTC timer
     echo "echo 2048 > /sys/class/rtc/rtc0/max_user_freq" > $MOUNT_DIR/usr/local/bin/max_rtc_timer.sh
@@ -212,10 +210,6 @@ setup_bootloader() {
     if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
         # Edit GRUB default configuration file
         sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
-        # Install BTRFS GRUB Packages
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm grub-btrfs
-        # Configure BTRFS GRUB
-        arch-chroot $MOUNT_DIR systemctl enable grub-btrfsd.service
     elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
         # Edit GRUB default configuration file
         sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
