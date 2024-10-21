@@ -4,16 +4,12 @@
 
 ## KDialog Prompts
 
-kde_app_launch() {
-    APPLICATION_CHOICE=`kdialog --combobox "Choose AV Application" "Ardour" "Carla" "QTractor" "REAPER"`
-}
-
 kde_cpu_gov() {
     CPU_GOVERNOR_CHOICE=`kdialog --combobox "Choose CPU Governor" ${CPU_GOVERNORS[@]}`
 }
 
 kde_greetings() {
-    AV_OPTIONS_SELECT=`kdialog --combobox "Select a pipewire session control option" "Application Launch" "Change CPU Governor" "Change Session Quantum" "Exit"`
+    AV_OPTIONS_SELECT=`kdialog --combobox "Select a pipewire session control option" "Change CPU Governor" "Change Session Quantum" "Exit"`
 }
 
 kde_pipewire_session() {
@@ -23,16 +19,12 @@ kde_pipewire_session() {
 
 ## Zenity Prompts
 
-zenity_app_launch() {
-    APPLICATION_CHOICE=`zenity --list --title="Choose AV Application" --column="Options" "Ardour" "Carla" "QTractor" "REAPER"`
-}
-
 zenity_cpu_gov() {
     CPU_GOVERNOR_CHOICE=`zenity --list --title="Choose CPU Governor" --column="Options" ${CPU_GOVERNORS[@]}`
 }
 
 zenity_greetings() {
-    AV_OPTIONS_SELECT=`zenity --list --title="Pipewire Control Center" --column="Options" "Application Launch" "Change CPU Governor" "Change Session Quantum" "Exit"`
+    AV_OPTIONS_SELECT=`zenity --list --title="Pipewire Control Center" --column="Options" "Change CPU Governor" "Change Session Quantum" "Exit"`
 }
 
 zenity_pipewire_session() {
@@ -41,18 +33,6 @@ zenity_pipewire_session() {
 }
 
 ## Program Logic
-
-launch_logic() {
-    if [[ "$APPLICATION_CHOICE" == "Ardour" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 ardour8 > /dev/null
-    elif [[ "$APPLICATION_CHOICE" == "Carla" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 carla > /dev/null
-    elif [[ "$APPLICATION_CHOICE" == "QTractor" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 qtractor > /dev/null
-    elif [[ "$APPLICATION_CHOICE" == "REAPER" ]]; then
-        WINEFSYNC=1 XDG_SESSION_TYPE=x11 reaper > /dev/null
-    fi
-}
 
 list_cpu_gov_logic() {
     ## Set CPUs variables
@@ -177,10 +157,7 @@ pw_session_logic() {
 
 set_cpu_gov_logic() {
     # Set CPU governor
-    for (( cpu=0; cpu<$(nproc); cpu++ ))
-    do
-        sudo cpupower frequency-set --governor performance "$CPU_GOVERNOR_CHOICE"
-    done
+    pkexec --user root cpupower frequency-set --governor performance "$CPU_GOVERNOR_CHOICE"
 }
 
 ## Session Tray Output
@@ -213,10 +190,7 @@ do
             kde_greetings
 
             # Options Commands
-            if [[ "$AV_OPTIONS_SELECT" == "Application Launch" ]]; then
-                kde_app_launch
-                launch_logic
-            elif [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
+            if [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
                 list_cpu_gov_logic
                 kde_cpu_gov
                 set_cpu_gov_logic
@@ -234,10 +208,7 @@ do
             zenity_greetings
 
             # Options Commands
-            if [[ "$AV_OPTIONS_SELECT" == "Application Launch" ]]; then
-                zenity_app_launch
-                launch_logic
-            elif [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
+            if [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
                 list_cpu_gov_logic
                 zenity_cpu_gov
                 set_cpu_gov_logic
@@ -256,10 +227,7 @@ do
             zenity_greetings
 
             # Options Commands
-            if [[ "$AV_OPTIONS_SELECT" == "Application Launch" ]]; then
-                zenity_app_launch
-                launch_logic
-            elif [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
+            if [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
                 list_cpu_gov_logic
                 kde_cpu_gov
                 set_cpu_gov_logic
@@ -277,10 +245,7 @@ do
             kde_greetings
 
             # Options Commands
-            if [[ "$AV_OPTIONS_SELECT" == "Application Launch" ]]; then
-                kde_app_launch
-                launch_logic
-            elif [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
+            if [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
                 list_cpu_gov_logic
                 zenity_cpu_gov
                 set_cpu_gov_logic
