@@ -157,7 +157,7 @@ pw_session_logic() {
 
 set_cpu_gov_logic() {
     # Set CPU governor
-    pkexec --user root cpupower frequency-set --governor performance "$CPU_GOVERNOR_CHOICE"
+    pkexec --user root cpupower frequency-set --governor "$CPU_GOVERNOR_CHOICE"
 }
 
 ## Session Tray Output
