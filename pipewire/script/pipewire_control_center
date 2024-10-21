@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Dependencies: pipewire-jack cpupower
+
 ## KDialog Prompts
 
 kde_app_launch() {
@@ -177,7 +179,7 @@ set_cpu_gov_logic() {
     # Set CPU governor
     for (( cpu=0; cpu<$(nproc); cpu++ ))
     do
-        echo "$CPU_GOVERNOR_CHOICE" | sudo tee -a /sys/devices/system/cpu/cpu${cpu}/cpufreq/scaling_governor > /dev/null
+        sudo cpupower frequency-set --governor performance "$CPU_GOVERNOR_CHOICE"
     done
 }
 
