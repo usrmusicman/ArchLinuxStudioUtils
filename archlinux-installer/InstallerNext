@@ -157,7 +157,7 @@ initialize_computer_settings() {
     echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
     echo "flatpak remote-add --if-not-exists flathub-user https://dl.flathub.org/repo/flathub.flatpakrepo --user" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
     echo "pkexec --user root flatpak remote-delete flathub" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
-    echo "rm $HOME/Desktop/enable_flatpak_as_user.sh" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    echo "rm enable_flatpak_as_user.sh" >> $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
     chmod 755 $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
 
     ## Pro audio/video configuration
