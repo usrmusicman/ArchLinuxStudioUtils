@@ -373,12 +373,13 @@ partition_mapping_btrfs() {
     # Create BTRFS subvolumes
     btrfs subvolume create $MOUNT_DIR/@
     btrfs subvolume create $MOUNT_DIR/@home
+    btrfs subvolume create $MOUNT_DIR/@logs
     btrfs subvolume create $MOUNT_DIR/@opt
+    btrfs subvolume create $MOUNT_DIR/@pkg
     btrfs subvolume create $MOUNT_DIR/@root
     btrfs subvolume create $MOUNT_DIR/@snapshots
     btrfs subvolume create $MOUNT_DIR/@srv
     btrfs subvolume create $MOUNT_DIR/@tmp
-    btrfs subvolume create $MOUNT_DIR/@var
 
     # Unmount root filesystem
     umount $MOUNT_DIR
@@ -393,16 +394,18 @@ partition_mapping_btrfs() {
     mkdir -p $MOUNT_DIR/root
     mkdir -p $MOUNT_DIR/srv
     mkdir -p $MOUNT_DIR/tmp
-    mkdir -p $MOUNT_DIR/var
+    mkdir -p $MOUNT_DIR/var/cache/pacman/pkg
+    mkdir -p $MOUNT_DIR/var/logs
 
     # Mount BTRFS subvolumes
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT $MOUNT_DIR/.snapshots
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@home $SYSTEM_ROOT $MOUNT_DIR/home
+    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@logs $SYSTEM_ROOT $MOUNT_DIR/var/log
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@opt $SYSTEM_ROOT $MOUNT_DIR/opt
+    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@pkg $SYSTEM_ROOT $MOUNT_DIR/var/cache/pacman/pkg
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@root $SYSTEM_ROOT $MOUNT_DIR/root
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@srv $SYSTEM_ROOT $MOUNT_DIR/srv
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@tmp $SYSTEM_ROOT $MOUNT_DIR/tmp
-    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@var $SYSTEM_ROOT $MOUNT_DIR/var
 
 }
 

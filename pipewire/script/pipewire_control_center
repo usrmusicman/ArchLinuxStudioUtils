@@ -212,11 +212,9 @@ do
                 list_cpu_gov_logic
                 zenity_cpu_gov
                 set_cpu_gov_logic
-                cpu_gov_systray
             elif [[ "$AV_OPTIONS_SELECT" == "Change Session Quantum" ]]; then
                 zenity_pipewire_session
                 pw_session_logic
-                pw_session_systray
             elif [[ "$AV_OPTIONS_SELECT" == "Exit" ]]; then
                 break
             fi
@@ -229,13 +227,11 @@ do
             # Options Commands
             if [[ "$AV_OPTIONS_SELECT" == "Change CPU Governor" ]]; then
                 list_cpu_gov_logic
-                kde_cpu_gov
+                zenity_cpu_gov
                 set_cpu_gov_logic
-                cpu_gov_systray
             elif [[ "$AV_OPTIONS_SELECT" == "Change Session Quantum" ]]; then
-                kde_pipewire_session
+                zenity_pipewire_session
                 pw_session_logic
-                pw_session_systray
             elif [[ "$AV_OPTIONS_SELECT" == "Exit" ]]; then
                 break
             fi
