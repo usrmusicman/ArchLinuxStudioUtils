@@ -35,7 +35,7 @@ btrfs_configuration() {
     echo "umount -lf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "pacman -Syyuu --noconfirm grub-btrfs snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm grub-btrfs snapper snap-pac" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
@@ -43,6 +43,8 @@ btrfs_configuration() {
     echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chown :wheel /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    sed -i -e "s/TIMELINE_CREATE=\"yes\"/TIMELINE_CREATE=\"no\"/" $MOUNT_DIR/etc/snapper/configs/root
+    sed -i -e "s/TIMELINE_CLEANUP=\"yes\"/TIMELINE_CLEANUP=\"no\"/" $MOUNT_DIR/etc/snapper/configs/root
     echo "rm first_run.sh" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "fi" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
 
@@ -325,6 +327,12 @@ setup_user_account() {
 
     # Enable the wheel group root privileges
     sed -i -e 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' $MOUNT_DIR/etc/sudoers
+
+    # Remove generated skeleton files
+    rm $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
+    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+        rm $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    fi
 
     # Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME audio
