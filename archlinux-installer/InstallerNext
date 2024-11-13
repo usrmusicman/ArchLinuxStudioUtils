@@ -32,15 +32,9 @@ btrfs_configuration() {
     mkdir -p $MOUNT_DIR/etc/skel/Desktop
     echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo 'if [[ "$USER" == "root" ]]; then' >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "umount -lf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "btrfs subvolume delete /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "pacman -Syyuu --noconfirm grub-btrfs snapper snap-pac" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm grub-btrfs snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "rm -rf /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "mkdir -p /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chown :wheel /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     sed -i -e "s/TIMELINE_CREATE=\"yes\"/TIMELINE_CREATE=\"no\"/" $MOUNT_DIR/etc/snapper/configs/root
@@ -268,9 +262,10 @@ setup_locale() {
 
     # Set system language
     sed -i -e "s/#${LOCALE}/${LOCALE}/" $MOUNT_DIR/etc/locale.gen
-    echo "LANGUAGE=${LOCALE}:${LOCALE/_*/}" > $MOUNT_DIR/etc/locale.conf
-    echo "LC_ALL=C" >> $MOUNT_DIR/etc/locale.conf
-    echo "LANG=${LOCALE}.UTF-8" >> $MOUNT_DIR/etc/locale.conf
+    echo "LANG=${LOCALE}.UTF-8" > $MOUNT_DIR/etc/locale.conf
+    echo "LC_COLLATE=C" >> $MOUNT_DIR/etc/locale.conf
+    echo "LC_MESSAGES=${LOCALE}.UTF-8" >> $MOUNT_DIR/etc/locale.conf
+    echo "LC_TIME=${LOCALE}.UTF-8" >> $MOUNT_DIR/etc/locale.conf
     arch-chroot $MOUNT_DIR locale-gen
 
     # Set timezone and correct time
@@ -381,11 +376,12 @@ partition_mapping_btrfs() {
     # Create BTRFS subvolumes
     btrfs subvolume create $MOUNT_DIR/@
     btrfs subvolume create $MOUNT_DIR/@home
-    btrfs subvolume create $MOUNT_DIR/@logs
+    btrfs subvolume create $MOUNT_DIR/@log
+    btrfs subvolume create $MOUNT_DIR/@machines
     btrfs subvolume create $MOUNT_DIR/@opt
-    btrfs subvolume create $MOUNT_DIR/@pkg
+    btrfs subvolume create $MOUNT_DIR/@okg
+    btrfs subvolume create $MOUNT_DIR/@portables
     btrfs subvolume create $MOUNT_DIR/@root
-    btrfs subvolume create $MOUNT_DIR/@snapshots
     btrfs subvolume create $MOUNT_DIR/@srv
     btrfs subvolume create $MOUNT_DIR/@tmp
 
@@ -396,24 +392,27 @@ partition_mapping_btrfs() {
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@ $SYSTEM_ROOT $MOUNT_DIR
 
     # Make system directories
-    mkdir -p $MOUNT_DIR/.snapshots
     mkdir -p $MOUNT_DIR/home
     mkdir -p $MOUNT_DIR/opt
     mkdir -p $MOUNT_DIR/root
     mkdir -p $MOUNT_DIR/srv
     mkdir -p $MOUNT_DIR/tmp
     mkdir -p $MOUNT_DIR/var/cache/pacman/pkg
-    mkdir -p $MOUNT_DIR/var/logs
+    mkdir -p $MOUNT_DIR/var/lib/machines
+    mkdir -p $MOUNT_DIR/var/lib/portables
+    mkdir -p $MOUNT_DIR/var/log
 
     # Mount BTRFS subvolumes
-    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@snapshots $SYSTEM_ROOT $MOUNT_DIR/.snapshots
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@home $SYSTEM_ROOT $MOUNT_DIR/home
-    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@logs $SYSTEM_ROOT $MOUNT_DIR/var/log
+    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@log $SYSTEM_ROOT $MOUNT_DIR/var/log
+    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@machines $SYSTEM_ROOT $MOUNT_DIR/var/lib/machines
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@opt $SYSTEM_ROOT $MOUNT_DIR/opt
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@pkg $SYSTEM_ROOT $MOUNT_DIR/var/cache/pacman/pkg
+    mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@portables $SYSTEM_ROOT $MOUNT_DIR/var/lib/portables
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@root $SYSTEM_ROOT $MOUNT_DIR/root
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@srv $SYSTEM_ROOT $MOUNT_DIR/srv
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@tmp $SYSTEM_ROOT $MOUNT_DIR/tmp
+
 
 }
 
