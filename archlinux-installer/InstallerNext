@@ -317,12 +317,6 @@ setup_user_account() {
     # Enable the wheel group root privileges
     sed -i -e 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' $MOUNT_DIR/etc/sudoers
 
-    # Remove generated skeleton files
-    rm $MOUNT_DIR/etc/skel/Desktop/enable_flatpak_as_user.sh
-    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-        rm $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    fi
-
     # Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME audio
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME realtime
