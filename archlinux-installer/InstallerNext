@@ -32,7 +32,7 @@ btrfs_configuration() {
     mkdir -p $MOUNT_DIR/etc/skel/Desktop
     echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo 'if [[ "$USER" == "root" ]]; then' >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "pacman -Syyuu --noconfirm grub-btrfs snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm grub-btrfs inotify-tools snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
