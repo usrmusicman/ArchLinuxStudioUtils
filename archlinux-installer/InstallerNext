@@ -20,7 +20,7 @@ OTHERGPU_DRV="lib32-vulkan-swrast lib32-vulkan-virtio libva-mesa-driver libva-ut
 BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs cpupower dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools lib32-pipewire-jack lib32-pipewire-v4l2 linux-firmware man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-libcamera pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
 
 # PLASMA DESKTOP
-PLASMA_DESKTOP="appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-mangohud libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 libportal-qt6 maliit-keyboard mangohud multilib-devel noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk xwaylandvideobridge yt-dlp"
+DESKTOP_SESSION="appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-mangohud libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 libportal-qt6 maliit-keyboard mangohud multilib-devel noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk xwaylandvideobridge yt-dlp"
 
 ## End of package lists
 
@@ -204,13 +204,7 @@ setup_bootloader() {
     arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory="${ESP_DIRECTORY/${MOUNT_DIR}/}" --bootloader-id="${OS_NAME}" ${SYSTEM_BOOT}
 
     # Check partition type
-    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-        # Edit GRUB default configuration file
-        sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
-    elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
-        # Edit GRUB default configuration file
-        sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
-    fi
+    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"rootflags=subvol=@,relatime,rw rootfstype=btrfs root=UUID=$ROOT_UUID resume=UUID=$ROOT_UUID ${BOOT_OPTIONS}\"/" $MOUNT_DIR/etc/default/grub
 
     # Create GRUB configuration file
     arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
@@ -230,6 +224,45 @@ setup_cpu_microcode() {
         echo "No microcode needed..."
         clear
     fi
+
+}
+
+setup_desktop_session() {
+
+    # Install Plasma Desktop
+    arch-chroot $MOUNT_DIR pacman -S --noconfirm $DESKTOP_SESSION
+
+    # Create SDDM directory
+    mkdir -p $MOUNT_DIR/etc/sddm.conf.d
+
+    # Install SDDM configuration
+    echo "[General]" > $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "HaltCommand=/usr/bin/systemctl poweroff" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "RebootCommand=/usr/bin/systemctl reboot" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "[Theme]" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "Current=breeze" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "CursorTheme=breeze_cursors" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "Font=Noto Sans,10,-1,0,50,0,0,0,0,0" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "[Users]" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "MaximumUid=60513" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+    echo "MinimumUid=1000" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
+
+    # Enable virtual keyboard module in SDDM
+    echo "[General]" > $MOUNT_DIR/etc/sddm.conf.d/virtualkbd.conf
+    echo "InputMethod=qtvirtualkeyboard" >> $MOUNT_DIR/etc/sddm.conf.d/virtualkbd.conf
+
+    # Enable system services
+    arch-chroot $MOUNT_DIR systemctl enable bluetooth.service
+    arch-chroot $MOUNT_DIR systemctl enable cups.service
+    arch-chroot $MOUNT_DIR systemctl enable cups-browsed.service
+    arch-chroot $MOUNT_DIR systemctl enable power-profiles-daemon.service
+    arch-chroot $MOUNT_DIR systemctl enable sddm.service
+
+    # Add user to groups
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME games
 
 }
 
@@ -273,45 +306,6 @@ setup_locale() {
 
 }
 
-setup_plasma_desktop() {
-
-    # Install Plasma Desktop
-    arch-chroot $MOUNT_DIR pacman -S --noconfirm $PLASMA_DESKTOP
-
-    # Create SDDM directory
-    mkdir -p $MOUNT_DIR/etc/sddm.conf.d
-
-    # Install SDDM configuration
-    echo "[General]" > $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "HaltCommand=/usr/bin/systemctl poweroff" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "RebootCommand=/usr/bin/systemctl reboot" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "[Theme]" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "Current=breeze" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "CursorTheme=breeze_cursors" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "Font=Noto Sans,10,-1,0,50,0,0,0,0,0" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "[Users]" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "MaximumUid=60513" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-    echo "MinimumUid=1000" >> $MOUNT_DIR/etc/sddm.conf.d/kde_settings.conf
-
-    # Enable virtual keyboard module in SDDM
-    echo "[General]" > $MOUNT_DIR/etc/sddm.conf.d/virtualkbd.conf
-    echo "InputMethod=qtvirtualkeyboard" >> $MOUNT_DIR/etc/sddm.conf.d/virtualkbd.conf
-
-    # Enable system services
-    arch-chroot $MOUNT_DIR systemctl enable bluetooth.service
-    arch-chroot $MOUNT_DIR systemctl enable cups.service
-    arch-chroot $MOUNT_DIR systemctl enable cups-browsed.service
-    arch-chroot $MOUNT_DIR systemctl enable power-profiles-daemon.service
-    arch-chroot $MOUNT_DIR systemctl enable sddm.service
-
-    # Add user to groups
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME games
-
-}
-
 setup_user_account() {
 
     # Create the new non-root user
@@ -332,7 +326,6 @@ setup_user_account() {
     # Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME audio
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME realtime
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME rtkit
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME video
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME wheel
 
@@ -348,38 +341,64 @@ partition_boot() {
 
 }
 
-partition_root_btrfs() {
+partition_root() {
 
-    # Create A BTRFS root partition
-    mkfs.btrfs -f $SYSTEM_ROOT
+    if [[ "$PARTITION_TYPE" == "none" ]]; then
+        continue
+    elif [[ "$PARTITION_TYPE" == "btrfs" ]]; then
+        # Create A BTRFS root partition
+        mkfs.btrfs -f $SYSTEM_ROOT
 
-    # Label BTRFS root partition
-    btrfs filesystem label $SYSTEM_ROOT "$OS_NAME"
-
-}
-
-partition_root_ext4() {
-
-    # Create A BTRFS root partition
-    mkfs.ext4 -f $SYSTEM_ROOT
-
-    # Label EXT4 root partition
-    e2label $SYSTEM_ROOT "$OS_NAME"
+        # Label BTRFS root partition
+        btrfs filesystem label $SYSTEM_ROOT "$OS_NAME"
+    fi
 
 }
 
-partition_mapping_btrfs() {
+partition_mapping() {
 
     # Mount root filesystem
     mount -t btrfs $SYSTEM_ROOT $MOUNT_DIR
 
+    if [[ "$PARTITION_TYPE" == "none" ]]; then
+        if [[ -d "$MOUNT_DIR/@" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@
+        fi
+        if [[ -d "$MOUNT_DIR/@log" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@log
+        fi
+        if [[ -d "$MOUNT_DIR/@machines" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@machines
+        fi
+        if [[ -d "$MOUNT_DIR/@opt" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@opt
+        fi
+        if [[ -d "$MOUNT_DIR/@pkg" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@pkg
+        fi
+        if [[ -d "$MOUNT_DIR/@portables" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@portables
+        fi
+        if [[ -d "$MOUNT_DIR/@root" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@root
+        fi
+        if [[ -d "$MOUNT_DIR/@srv" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@srv
+        fi
+        if [[ -d "$MOUNT_DIR/@tmp" ]]; then
+            btrfs subvolume delete $MOUNT_DIR/@tmp
+        fi
+    fi
+
     # Create BTRFS subvolumes
     btrfs subvolume create $MOUNT_DIR/@
-    btrfs subvolume create $MOUNT_DIR/@home
+    if [[ ! -d "$MOUNT_DIR/@home" ]]; then
+        btrfs subvolume create $MOUNT_DIR/@home
+    fi
     btrfs subvolume create $MOUNT_DIR/@log
     btrfs subvolume create $MOUNT_DIR/@machines
     btrfs subvolume create $MOUNT_DIR/@opt
-    btrfs subvolume create $MOUNT_DIR/@okg
+    btrfs subvolume create $MOUNT_DIR/@pkg
     btrfs subvolume create $MOUNT_DIR/@portables
     btrfs subvolume create $MOUNT_DIR/@root
     btrfs subvolume create $MOUNT_DIR/@srv
@@ -412,14 +431,6 @@ partition_mapping_btrfs() {
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@root $SYSTEM_ROOT $MOUNT_DIR/root
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@srv $SYSTEM_ROOT $MOUNT_DIR/srv
     mount -t btrfs -o rw,compress=zstd:6,relatime,subvol=@tmp $SYSTEM_ROOT $MOUNT_DIR/tmp
-
-
-}
-
-partition_mapping_ext4() {
-
-    # Mount root filesystem
-    mount -t ext4 $SYSTEM_ROOT $MOUNT_DIR
 
 }
 
@@ -519,7 +530,7 @@ if [[ "$USER" == "root" ]]; then
         clear
         echo "Choose Partition Type..."
         echo ""
-        read -r -p "Choose the bootloader to install (i.e. btrfs or ext4): " PARTITION_TYPE
+        read -r -p "Choose a partition type for system install (i.e. btrfs or none): " PARTITION_TYPE
         echo ""
         read -r -p "Is this the correct partition type (type yes or no or exit)?: " MENU_OPTION
 
@@ -528,7 +539,7 @@ if [[ "$USER" == "root" ]]; then
             # Check the partition type
             if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
                 break
-            elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
+            elif [[ "$PARTITION_TYPE" == "none" ]]; then
                 break
             else
                 echo ""
@@ -750,13 +761,8 @@ if [[ "$USER" == "root" ]]; then
 
     ## Partition system
     clear
-    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-        partition_root_btrfs
-        partition_mapping_btrfs
-    elif [[ "$PARTITION_TYPE" == "ext4" ]]; then
-        partition_root_ext4
-        partition_mapping_ext4
-    fi
+    partition_root
+    partition_mapping
     partition_boot
     echo ""
     echo "Partitioned System..."
@@ -766,15 +772,10 @@ if [[ "$USER" == "root" ]]; then
     clear
     initialize_system
     initialize_computer_settings
+    btrfs_configuration
     echo ""
     echo "Created Initial System..."
     sleep 5
-
-    ## Create post install script for btrfs
-    if [[ "$PARTITION_TYPE" == "btrfs" ]]; then
-        clear
-        btrfs_configuration
-    fi
 
     ## CPU microcode install
     while :
@@ -878,13 +879,13 @@ if [[ "$USER" == "root" ]]; then
         if [[ "${DESKTOP_ENV}" == "none" ]]; then
             clear
             echo ""
-            echo "No Desktop Environment Installed..."
+            echo "No desktop environment installed..."
             sleep 5
         elif [[ "${DESKTOP_ENV}" == "plasma" ]]; then
             clear
-            setup_plasma_desktop
+            setup_desktop_session
             echo ""
-            echo "Installed The Plasma Desktop..."
+            echo "Installed the desktop environment..."
             sleep 5
             break
         else
