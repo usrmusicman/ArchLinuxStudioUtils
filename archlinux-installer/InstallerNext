@@ -418,8 +418,6 @@ snapper_configuration() {
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chown :wheel /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    sed -i -e "s/TIMELINE_CREATE=\"yes\"/TIMELINE_CREATE=\"no\"/" $MOUNT_DIR/etc/snapper/configs/root
-    sed -i -e "s/TIMELINE_CLEANUP=\"yes\"/TIMELINE_CLEANUP=\"no\"/" $MOUNT_DIR/etc/snapper/configs/root
     echo "rm first_run.sh" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "fi" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
 
