@@ -17,14 +17,21 @@ NVIDIAGPU_DRV="lib32-nvidia-utils lib32-opencl-nvidia lib32-primus_vk libva-nvid
 OTHERGPU_DRV="lib32-vulkan-swrast lib32-vulkan-virtio libva-mesa-driver libva-utils mesa vulkan-swrast vulkan-virtio"
 
 # BASE SYSTEM
-BASE_SYSTEM="alsa-utils avahi bash-completion btrfs-progs cpupower dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools lib32-pipewire-jack lib32-pipewire-v4l2 linux-firmware man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-libcamera pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
+BASE_SYSTEM="7-zip alsa-utils avahi bash-completion btrfs-progs cpupower dosfstools efibootmgr exfatprogs fastfetch ffmpeg firewalld git gnu-free-fonts grub i2c-tools lib32-pipewire-jack lib32-pipewire-v4l2 linux-firmware man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager ntfs-3g pipewire-alsa pipewire-audio pipewire-ffado pipewire-jack pipewire-libcamera pipewire-pulse pipewire-session-manager pipewire-v4l2 plymouth power-profiles-daemon pulse-native-provider realtime-privileges reflector rsync rtirq sshfs sudo udisks2 udisks2-btrfs vim vim-runtime wget wireless-regdb wireplumber zram-generator"
 
 # PLASMA DESKTOP
-DESKTOP_SESSION="appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gstreamer-vaapi gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-mangohud libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 libportal-qt6 maliit-keyboard mangohud multilib-devel noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk xwaylandvideobridge yt-dlp"
+DESKTOP_SESSION="appmenu-gtk-module ark bluez bluez-cups bluez-obex bluez-utils breeze5 colord cups cups-browsed cups-filters cups-pk-helper dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox flatpak flatpak-xdg-utils fwupd gamemode gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-base gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-plugin-va gwenview hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us ifuse kaccounts-integration kaccounts-providers kamera kate kcalc kdeconnect kdegraphics-mobipocket kdegraphics-thumbnailers kdenetwork-filesharing kdialog keditbookmarks kimageformats kimageformats5 kio-admin kio-extras kio-gdrive kio-zeroconf konsole kwalletmanager kwayland-integration lib32-gamemode lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-mangohud libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdvdcss libgpod libportal libportal-gtk3 libportal-gtk4 libportal-qt5 libportal-qt6 maliit-keyboard mangohud multilib-devel noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra openrgb orca p7zip partitionmanager phonon-qt5-gstreamer phonon-qt5-vlc phonon-qt6-vlc plasma plasma-applet-window-buttons plasma-framework5 plasma-wayland-protocols plasma5-integration power-profiles-daemon qpwgraph qt6-imageformats qt6-multimedia-ffmpeg qt6-multimedia-gstreamer qt6-virtualkeyboard quota-tools spectacle switcheroo-control system-config-printer thunderbird unarchiver usbguard vlc xdg-desktop-portal-gtk xdg-user-dirs xdg-user-dirs-gtk xwaylandvideobridge yt-dlp"
 
 ## End of package lists
 
 # <<-- Functions -->>
+
+disk_mapping() {
+
+    # Create Disk Mapping
+    cfdisk $SYSTEM_DISK
+
+}
 
 initialize_system() {
 
@@ -42,34 +49,22 @@ initialize_system() {
     # Create bootstrap enviornment
     pacstrap $MOUNT_DIR base base-devel
 
-    if [[ "$CHAOTIC" == "yes" ]]; then
+    # Chaotic Key Signature
+    CHAOTIC_KEYSIG="3056513887B78AEB"
 
-        # Chaotic Key Signature
-        CHAOTIC_KEYSIG="3056513887B78AEB"
+    # Recover Chaotic key signatures
+    arch-chroot $MOUNT_DIR pacman-key --recv-key ${CHAOTIC_KEYSIG} --keyserver keyserver.ubuntu.com
+    arch-chroot $MOUNT_DIR pacman-key --lsign-key ${CHAOTIC_KEYSIG}
 
-        # Recover Chaotic key signatures
-        arch-chroot $MOUNT_DIR pacman-key --recv-key ${CHAOTIC_KEYSIG} --keyserver keyserver.ubuntu.com
-        arch-chroot $MOUNT_DIR pacman-key --lsign-key ${CHAOTIC_KEYSIG}
+    # Install Chaotic repo packages
+    arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
+    arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
-        # Install Chaotic repo packages
-        arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-        arch-chroot $MOUNT_DIR pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+    # Install pacman.conf
+    install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
 
-        # Install pacman.conf
-        install -Dm644 pacman.conf.chaotic $MOUNT_DIR/etc/pacman.conf
-
-        # Refresh package database (Chroot)
-        arch-chroot $MOUNT_DIR pacman -Syy
-
-    else
-
-        # Install pacman.conf
-        install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
-
-        # Refresh package database (Chroot)
-        arch-chroot $MOUNT_DIR pacman -Syy
-
-    fi
+    # Refresh package database (Chroot)
+    arch-chroot $MOUNT_DIR pacman -Syy
 
     # Generate filesystem mounts
     genfstab -U $MOUNT_DIR > $MOUNT_DIR/etc/fstab
@@ -254,6 +249,7 @@ partition_mapping() {
 partition_root() {
 
     if [[ "$PARTITION_TYPE" == "none" ]]; then
+        # Do nothing
         continue
     elif [[ "$PARTITION_TYPE" == "btrfs" ]]; then
         # Create A BTRFS root partition
@@ -413,7 +409,7 @@ snapper_configuration() {
     mkdir -p $MOUNT_DIR/etc/skel/Desktop
     echo "#!/bin/sh" > $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo 'if [[ "$USER" == "root" ]]; then' >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
-    echo "pacman -Syyuu --noconfirm grub-btrfs inotify-tools snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
+    echo "pacman -Syyuu --noconfirm btrfs-assistant btrfsmaintenance grub-btrfs inotify-tools snapper" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "systemctl enable grub-btrfsd.service" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "snapper -c root create-config /" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
     echo "chmod 750 /.snapshots" >> $MOUNT_DIR/etc/skel/Desktop/first_run.sh
@@ -440,9 +436,9 @@ if [[ "$USER" == "root" ]]; then
         echo ""
         lsblk -o PATH,SIZE,TYPE | grep "disk"
         echo ""
-        read -r -p "Choose partition for the boot loader (i.e. /dev/sda1): " SYSTEM_DISK
+        read -r -p "Choose the correct disk for system install (i.e. /dev/sda1): " SYSTEM_DISK
         echo ""
-        read -r -p "Is this the correct boot partition (type yes or no or exit)?: " MENU_OPTION
+        read -r -p "Is this the correct drive for system install (type yes or no or exit)?: " MENU_OPTION
 
         # Check if you wanted this to be a boot partition
         if [[ "${MENU_OPTION}" == "yes" ]]; then
@@ -458,6 +454,10 @@ if [[ "$USER" == "root" ]]; then
         fi
 
     done
+
+    ## Run cfdisk
+    disk_mapping
+    clear
 
     ## Set system boot partition
     while :
@@ -713,30 +713,6 @@ if [[ "$USER" == "root" ]]; then
         read -r -p "Is this the correct Operating System name (type yes or no or exit)?: " MENU_OPTION
 
         # Check if you wanted this to be your Operating System name
-        if [[ "${MENU_OPTION}" == "yes" ]]; then
-            break
-        elif [[ "${MENU_OPTION}" == "no" ]]; then
-            clear
-        elif [[ "${MENU_OPTION}" == "exit" ]]; then
-            exit
-        else
-            echo ""
-            echo "Type in a valid option"
-            sleep 2
-        fi
-
-    done
-
-    ## Type in yes or no if you want to use the chaotic repo
-    while :
-    do
-
-        clear
-        read -r -p "Do you want to use the chaotic repo (type yes or no)?: " CHAOTIC
-        echo ""
-        read -r -p "Is this the correct linux kernel name (type yes or no or exit)?: " MENU_OPTION
-
-        # Check if you wanted to use the chaotic repo
         if [[ "${MENU_OPTION}" == "yes" ]]; then
             break
         elif [[ "${MENU_OPTION}" == "no" ]]; then
